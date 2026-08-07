@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
+import ComingSoonCard from "@/components/ComingSoonCard";
 import EventPoster from "@/components/eventbrite/EventPoster";
 import TicketWidget from "@/components/eventbrite/TicketWidget";
 import {
@@ -9,6 +10,7 @@ import {
   getUpcomingEvents,
   type EventbriteEvent,
 } from "@/lib/eventbrite";
+import { getUpcomingTeasers, type UpcomingTeaser } from "@/lib/contentful";
 
 export const revalidate = 300;
 
@@ -19,24 +21,43 @@ export const metadata: Metadata = {
 
 const TICKETS_URL = "https://buytickets.at/desiroom909";
 
-async function loadEvents(): Promise<{ upcoming: EventbriteEvent[]; past: EventbriteEvent[]; error: boolean }> {
+async function loadEvents(): Promise<{ upcoming: EventbriteEvent[]; past: EventbriteEvent[] }> {
   try {
     const [upcoming, past] = await Promise.all([getUpcomingEvents(), getPastEvents()]);
-    return { upcoming, past, error: false };
+    return { upcoming, past };
   } catch {
-    return { upcoming: [], past: [], error: true };
+    return { upcoming: [], past: [] };
+  }
+}
+
+async function loadTeasers(): Promise<UpcomingTeaser[]> {
+  try {
+    return await getUpcomingTeasers();
+  } catch {
+    return [];
   }
 }
 
 export default async function EventsPage() {
-  const { upcoming, past, error } = await loadEvents();
+  const [{ upcoming, past }, teasers] = await Promise.all([loadEvents(), loadTeasers()]);
 
   return (
     <div style={{ minHeight: "100vh", background: "var(--color-surface)", color: "var(--color-cream)", fontFamily: "var(--font-body)" }}>
       <Header active="/events" />
 
-      <div style={{ padding: "80px 44px 30px", maxWidth: 1200, margin: "0 auto" }}>
-        <div style={{ fontSize: 12, letterSpacing: "0.5em", color: "var(--color-lime)", marginBottom: 18 }}>UPCOMING ROOMS</div>
+      <div style={{ padding: "80px var(--page-px) 30px", maxWidth: 1200, margin: "0 auto" }}>
+        <div
+          style={{
+            fontFamily: "var(--font-label)",
+            fontWeight: 100,
+            fontSize: 12,
+            letterSpacing: "0.5em",
+            color: "var(--color-lime)",
+            marginBottom: 18,
+          }}
+        >
+          UPCOMING ROOMS
+        </div>
         <div
           style={{
             fontFamily: "var(--font-display)",
@@ -56,22 +77,19 @@ export default async function EventsPage() {
         </div>
       </div>
 
-      {error && (
-        <div style={{ maxWidth: 1200, margin: "0 auto", padding: "0 44px 60px" }}>
-          <div style={{ border: "1px solid var(--color-cream-a25)", padding: "28px 32px", color: "var(--color-cream-a70)", fontSize: 14 }}>
-            The lineup couldn&rsquo;t load right now. Check back shortly.
-          </div>
-        </div>
-      )}
-
-      {!error && upcoming.length === 0 && (
-        <div style={{ maxWidth: 1200, margin: "0 auto", padding: "0 44px 60px" }}>
-          <div style={{ border: "1px solid var(--color-cream-a25)", padding: "28px 32px", color: "var(--color-cream-a70)", fontSize: 14 }}>
-            Nothing on the calendar right now. Follow{" "}
-            <a href="https://instagram.com/desiroom909" target="_blank" rel="noopener noreferrer">
-              @desiroom909
-            </a>{" "}
-            for the next drop.
+      {upcoming.length === 0 && teasers.length === 0 && (
+        <div style={{ maxWidth: 1200, margin: "0 auto", padding: "0 var(--page-px) 100px" }}>
+          <div style={{ border: "1px solid var(--color-cream-a25)", padding: "48px var(--page-px)", textAlign: "center" }}>
+            <div style={{ fontFamily: "var(--font-display)", fontWeight: 700, fontSize: 28, lineHeight: 1.1 }}>
+              NO DOORS OPEN RIGHT NOW.
+            </div>
+            <div style={{ fontSize: 14, lineHeight: 1.7, color: "var(--color-cream-a70)", maxWidth: 440, margin: "14px auto 0" }}>
+              We post the next room before it ever hits a calendar. Follow{" "}
+              <a href="https://instagram.com/desiroom909" target="_blank" rel="noopener noreferrer">
+                @desiroom909
+              </a>{" "}
+              so you&rsquo;re not the last to know.
+            </div>
           </div>
         </div>
       )}
@@ -79,7 +97,7 @@ export default async function EventsPage() {
       {upcoming.length > 0 && (
         <div
           style={{
-            padding: "40px 44px 100px",
+            padding: "40px var(--page-px) 100px",
             maxWidth: 1200,
             margin: "0 auto",
             display: "grid",
@@ -158,9 +176,31 @@ export default async function EventsPage() {
         </div>
       )}
 
+      {teasers.length > 0 && (
+        <div style={{ padding: "0 var(--page-px) 100px", maxWidth: 1200, margin: "0 auto" }}>
+          <div style={{ display: "flex", alignItems: "baseline", gap: 18, flexWrap: "wrap", marginBottom: 36 }}>
+            <div style={{ fontFamily: "var(--font-display)", fontWeight: 700, fontSize: 30, lineHeight: 1 }}>
+              MORE ON THE WAY
+            </div>
+            <div style={{ flex: 1, height: 1, background: "var(--color-cream-a20)", minWidth: 40 }} />
+          </div>
+          <div
+            style={{
+              display: "grid",
+              gridTemplateColumns: "repeat(auto-fill, minmax(220px, 1fr))",
+              gap: 28,
+            }}
+          >
+            {teasers.map((teaser) => (
+              <ComingSoonCard key={teaser.id} teaser={teaser} />
+            ))}
+          </div>
+        </div>
+      )}
+
       {past.length > 0 && (
         <div style={{ background: "#0A0A0A", borderTop: "1px solid rgba(242,233,221,0.14)", borderBottom: "1px solid rgba(242,233,221,0.14)" }}>
-          <div style={{ maxWidth: 1200, margin: "0 auto", padding: "90px 44px" }}>
+          <div style={{ maxWidth: 1200, margin: "0 auto", padding: "90px var(--page-px)" }}>
             <div style={{ display: "flex", alignItems: "baseline", gap: 20, flexWrap: "wrap", marginBottom: 14 }}>
               <div
                 style={{
@@ -182,31 +222,23 @@ export default async function EventsPage() {
             </div>
             <div style={{ display: "flex", flexDirection: "column" }}>
               {past.map((event) => (
-                <div
-                  key={event.id}
-                  style={{
-                    display: "grid",
-                    gridTemplateColumns: "110px 1fr auto",
-                    gap: 28,
-                    alignItems: "center",
-                    padding: "26px 0",
-                    borderTop: "1px solid rgba(242,233,221,0.16)",
-                  }}
-                >
+                <div key={event.id} className="events-past-row" style={{ borderTop: "1px solid rgba(242,233,221,0.16)" }}>
                   <EventPoster
                     src={event.logoUrl}
                     alt={event.name}
                     sizes="110px"
                     grayscale
-                    style={{ width: 110, height: 110, border: "1px solid var(--color-cream-a20)" }}
+                    className="events-past-thumb"
+                    style={{ border: "1px solid var(--color-cream-a20)" }}
                   />
-                  <div>
+                  <div className="events-past-info">
                     <div style={{ fontSize: 11, letterSpacing: "0.3em", color: "var(--color-cream-a55)", marginBottom: 8 }}>
                       {formatPastEventDate(event.endUtc, event.timezone)} · {event.venueName}
                     </div>
                     <div style={{ fontFamily: "var(--font-display)", fontWeight: 700, fontSize: 34, lineHeight: 1 }}>{event.name}</div>
                   </div>
                   <div
+                    className="events-past-badge"
                     style={{
                       border: "1.5px solid var(--color-lime)",
                       color: "var(--color-lime)",

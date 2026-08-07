@@ -192,7 +192,7 @@ export default function GalleryAlbums({ albums }: { albums: EventGallery[] }) {
             flexDirection: "column",
             alignItems: "center",
             justifyContent: "center",
-            padding: 44,
+            padding: "20px var(--page-px)",
           }}
         >
           <div
@@ -223,7 +223,7 @@ export default function GalleryAlbums({ albums }: { albums: EventGallery[] }) {
                   {activePhoto.fileName}
                 </div>
               </div>
-              <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+              <div style={{ display: "flex", alignItems: "center", gap: 12, flexWrap: "wrap" }}>
                 <button
                   type="button"
                   className="lightbox-btn"
