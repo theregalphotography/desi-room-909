@@ -1,0 +1,206 @@
+:root {
+  --color-bg: #0a0a0a;
+  --color-surface: #111111;
+  --color-cream: #f2e9dd;
+  --color-lime: #b7f04a;
+  --color-cream-a22: rgba(242, 233, 221, 0.22);
+  --color-cream-a18: rgba(242, 233, 221, 0.18);
+  --color-cream-a20: rgba(242, 233, 221, 0.2);
+  --color-cream-a25: rgba(242, 233, 221, 0.25);
+  --color-cream-a45: rgba(242, 233, 221, 0.45);
+  --color-cream-a55: rgba(242, 233, 221, 0.55);
+  --color-cream-a60: rgba(242, 233, 221, 0.6);
+  --color-cream-a70: rgba(242, 233, 221, 0.7);
+  --font-display: var(--font-big-shoulders), sans-serif;
+  --font-brand: var(--font-fredoka), sans-serif;
+  --font-body: var(--font-archivo), sans-serif;
+  --font-mono: ui-monospace, monospace;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  padding: 0;
+  margin: 0;
+}
+
+body {
+  background: var(--color-bg);
+  font-family: var(--font-body);
+  font-optical-sizing: auto;
+}
+
+a {
+  color: var(--color-lime);
+  text-decoration: none;
+}
+
+a:hover {
+  color: var(--color-cream);
+}
+
+::selection {
+  background: var(--color-lime);
+  color: var(--color-bg);
+}
+
+button {
+  font-family: var(--font-body);
+}
+
+.noise-overlay {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 60;
+  opacity: 0.55;
+  mix-blend-mode: soft-light;
+  background-image: url('data:image/svg+xml,%3Csvg%20xmlns=%27http://www.w3.org/2000/svg%27%20width=%27300%27%20height=%27300%27%3E%3Cfilter%20id=%27n%27%3E%3CfeTurbulence%20type=%27fractalNoise%27%20baseFrequency=%270.8%27%20numOctaves=%272%27/%3E%3C/filter%3E%3Crect%20width=%27300%27%20height=%27300%27%20filter=%27url(%23n)%27%20opacity=%270.6%27/%3E%3C/svg%3E');
+}
+
+.nav-link {
+  color: var(--color-cream);
+}
+
+.nav-link:hover {
+  color: var(--color-lime);
+}
+
+.nav-link-active {
+  color: var(--color-lime);
+}
+
+.ticket-btn {
+  background: var(--color-lime);
+  color: var(--color-bg);
+}
+
+.ticket-btn:hover {
+  background: var(--color-cream);
+  color: var(--color-bg);
+}
+
+.footer-link {
+  color: var(--color-cream);
+}
+
+.footer-link:hover {
+  color: var(--color-lime);
+}
+
+.cta-btn {
+  background: var(--color-lime);
+  color: var(--color-bg);
+}
+
+.cta-btn:hover {
+  background: var(--color-cream);
+}
+
+.photo-tile {
+  border: 1px solid var(--color-cream-a22);
+}
+
+.photo-tile:hover {
+  border-color: var(--color-lime);
+}
+
+.photo-tile-overlay {
+  opacity: 0;
+  transition: opacity 0.15s;
+}
+
+.photo-tile:hover .photo-tile-overlay,
+.photo-tile:focus-visible .photo-tile-overlay {
+  opacity: 1;
+}
+
+.load-more-btn {
+  border-color: var(--color-cream-a45);
+  color: var(--color-cream);
+}
+
+.load-more-btn:hover {
+  border-color: var(--color-lime);
+  color: var(--color-lime);
+}
+
+.lightbox-btn {
+  border-color: var(--color-cream-a45);
+  color: var(--color-cream);
+}
+
+.lightbox-btn:hover {
+  border-color: var(--color-lime);
+  color: var(--color-lime);
+}
+
+.lightbox-download {
+  background: var(--color-lime);
+  color: var(--color-bg);
+}
+
+.lightbox-download:hover:not(:disabled) {
+  background: var(--color-cream);
+}
+
+.lightbox-close {
+  color: var(--color-cream-a60);
+}
+
+.lightbox-close:hover {
+  color: var(--color-cream);
+}
+
+.btn-solid {
+  background: var(--color-lime);
+  color: var(--color-bg);
+}
+
+.btn-solid:hover:not(:disabled) {
+  background: var(--color-cream);
+}
+
+.btn-outline {
+  border-color: var(--color-cream-a45);
+  color: var(--color-cream);
+}
+
+.btn-outline:hover {
+  border-color: var(--color-lime);
+  color: var(--color-lime);
+}
+
+.accent-hover {
+  color: var(--color-cream);
+}
+
+.accent-hover:hover {
+  color: var(--color-lime);
+}
+
+.contact-card-link {
+  border-color: var(--color-cream-a25);
+  color: var(--color-cream);
+}
+
+.contact-card-link:hover {
+  border-color: var(--color-lime);
+  color: var(--color-lime);
+}
+
+@keyframes marquee {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(-50%);
+  }
+}
+
+.marquee-track {
+  animation: marquee 28s linear infinite;
+}
