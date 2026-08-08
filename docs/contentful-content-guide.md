@@ -29,7 +29,7 @@ Client manages events entirely inside Eventbrite as normal. The site derives eve
 
 No cross-reference to Contentful happens here.
 
-## Contentful — three content types, client-managed
+## Contentful — four content types, client-managed
 
 ### `eventGallery` (Gallery page)
 
@@ -66,6 +66,22 @@ unpublish/delete the teaser once the real event goes live in Eventbrite** — th
 detect or dedupe this automatically, so both a teaser and the real event can show
 simultaneously if forgotten.
 
+### `heroEventPoster` (Home "Happening Next" hero, poster override, singleton)
+
+| Field | Type | Notes |
+|---|---|---|
+| `poster` | Link:Asset | Replaces the hero poster image |
+
+**This is the one exception to "Contentful never cross-references Eventbrite."** Every other
+hero detail — name, date, venue, ticket availability — still comes straight from Eventbrite;
+only the poster image is swappable. Same singleton pattern as `aboutPage`: only one entry
+should ever be published, the app always reads the first one it finds, and publishing nothing
+here is safe — the hero falls back to that event's own Eventbrite logo automatically.
+
+The hero only ever shows one event at a time, so there's no event-matching. **Client must
+update (or unpublish) this entry when the featured event changes** — same manual-upkeep risk
+as `upcomingTeaser`, the app won't detect a stale poster on its own.
+
 ## Migrations
 
 Content types are created via versioned migration scripts (not manual UI setup), so field IDs
@@ -73,6 +89,7 @@ are guaranteed to match what the code reads:
 
 - `contentful/migrations/001-initial-content-types.js` — `eventGallery`, `aboutPage`
 - `contentful/migrations/002-upcoming-teaser.js` — `upcomingTeaser`
+- `contentful/migrations/003-hero-event-poster.js` — `heroEventPoster`
 
 Run with `contentful-migration` (via `npx`), requires a Content Management API token
 (write access, separate from the runtime `CONTENTFUL_ACCESS_TOKEN` Delivery token). The
@@ -91,7 +108,7 @@ npx contentful-migration --space-id <SPACE_ID> --environment-id master \
   on-demand by a Contentful webhook → `app/api/revalidate/contentful/route.ts`, which reads
   `sys.contentType.sys.id` from the webhook payload and calls
   `revalidateTag(tag, { expire: 0 })` for the matching content type.
-- Configure **one** webhook in Contentful (Settings → Webhooks) covering all three content
+- Configure **one** webhook in Contentful (Settings → Webhooks) covering all four content
   types — the route reads `sys.contentType.sys.id` from the payload itself and busts the
   matching tag, so a single webhook triggering on Entry publish/unpublish is enough. Point it
   at `https://<your-domain>/api/revalidate/contentful`, with header

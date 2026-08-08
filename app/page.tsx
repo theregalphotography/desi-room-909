@@ -12,7 +12,7 @@ import {
   selectHeroEvent,
   type EventbriteEvent,
 } from "@/lib/eventbrite";
-import { getUpcomingTeasers, type UpcomingTeaser } from "@/lib/contentful";
+import { getHeroEventPoster, getUpcomingTeasers, type UpcomingTeaser } from "@/lib/contentful";
 
 export const revalidate = 300;
 
@@ -39,12 +39,21 @@ async function loadTeasers(): Promise<UpcomingTeaser[]> {
   }
 }
 
+async function loadHeroPoster(): Promise<string | null> {
+  try {
+    return await getHeroEventPoster();
+  } catch {
+    return null;
+  }
+}
+
 export default async function HomePage() {
   const [{ upcoming, error }, teasers] = await Promise.all([
     loadUpcoming(),
     loadTeasers(),
   ]);
   const hero = selectHeroEvent(upcoming);
+  const heroPosterUrl = hero ? await loadHeroPoster() : null;
   const visibleTeasers = teasers.slice(0, 2);
 
   return (
@@ -244,7 +253,7 @@ export default async function HomePage() {
                 HAPPENING NEXT
               </div>
               <EventPoster
-                src={hero.logoUrl}
+                src={heroPosterUrl ?? hero.logoUrl}
                 alt={hero.name}
                 sizes="(max-width: 1024px) 90vw, 420px"
                 style={{

@@ -2,15 +2,18 @@ const CONTENTFUL_API_BASE = "https://cdn.contentful.com";
 const EVENT_GALLERY_CONTENT_TYPE = "eventGallery";
 const ABOUT_PAGE_CONTENT_TYPE = "aboutPage";
 const UPCOMING_TEASER_CONTENT_TYPE = "upcomingTeaser";
+const HERO_EVENT_POSTER_CONTENT_TYPE = "heroEventPoster";
 export const GALLERY_CACHE_TAG = "gallery";
 export const ABOUT_PAGE_CACHE_TAG = "about-page";
 export const UPCOMING_TEASERS_CACHE_TAG = "upcoming-teasers";
+export const HERO_EVENT_POSTER_CACHE_TAG = "hero-event-poster";
 
 /** Maps a Contentful content type ID (from a webhook payload) to its cache tag. */
 export const CONTENTFUL_TAGS_BY_CONTENT_TYPE: Record<string, string> = {
   [EVENT_GALLERY_CONTENT_TYPE]: GALLERY_CACHE_TAG,
   [ABOUT_PAGE_CONTENT_TYPE]: ABOUT_PAGE_CACHE_TAG,
   [UPCOMING_TEASER_CONTENT_TYPE]: UPCOMING_TEASERS_CACHE_TAG,
+  [HERO_EVENT_POSTER_CONTENT_TYPE]: HERO_EVENT_POSTER_CACHE_TAG,
 };
 
 export interface GalleryPhoto {
@@ -248,6 +251,52 @@ export async function getUpcomingTeasers(): Promise<UpcomingTeaser[]> {
     })
     .sort((a, b) => a.sortKey - b.sortKey)
     .map(({ teaser }) => teaser);
+}
+
+interface HeroEventPosterEntry {
+  fields: {
+    poster?: { sys: { id: string } };
+  };
+}
+
+/**
+ * Fetches the singleton poster override for the Home "Happening Next" hero.
+ * All other hero details (name, date, venue, tickets) still come from
+ * Eventbrite — this only swaps the image. Returns null if no entry has been
+ * published yet, so the caller can fall back to the event's own Eventbrite
+ * logo. The hero only ever shows one event at a time, so there's no
+ * event-matching here — the client is responsible for updating this entry
+ * when the featured event changes.
+ */
+export async function getHeroEventPoster(): Promise<string | null> {
+  const { spaceId, accessToken } = getConfig();
+  const params = new URLSearchParams({
+    content_type: HERO_EVENT_POSTER_CONTENT_TYPE,
+    include: "1",
+    limit: "1",
+  });
+
+  const res = await fetch(
+    `${CONTENTFUL_API_BASE}/spaces/${spaceId}/environments/master/entries?${params}`,
+    {
+      headers: { Authorization: `Bearer ${accessToken}` },
+      cache: "force-cache",
+      next: { tags: [HERO_EVENT_POSTER_CACHE_TAG] },
+    }
+  );
+
+  if (!res.ok) {
+    throw new Error(`Contentful request failed: ${res.status} ${res.statusText}`);
+  }
+
+  const data: { items: HeroEventPosterEntry[]; includes?: { Asset?: ContentfulAsset[] } } = await res.json();
+  const assetsById = new Map((data.includes?.Asset ?? []).map((asset) => [asset.sys.id, asset]));
+
+  const entry = data.items[0];
+  if (!entry?.fields.poster) return null;
+
+  const poster = mapAsset(assetsById.get(entry.fields.poster.sys.id), "hero-poster");
+  return poster?.url ?? null;
 }
 
 export function formatEventMeta(eventDate: string): string {
