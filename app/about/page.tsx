@@ -6,7 +6,8 @@ import { getAboutPage, type AboutPage } from "@/lib/contentful";
 
 export const metadata: Metadata = {
   title: "About",
-  description: "Desi Room 909 started the way most good nights do — the story behind the room that moves.",
+  description:
+    "Desi Room 909 started the way most good nights do — the story behind the room that moves.",
 };
 
 const FALLBACK_ABOUT: AboutPage = {
@@ -20,9 +21,21 @@ const FALLBACK_ABOUT: AboutPage = {
 };
 
 const PRINCIPLES = [
-  { number: "01", title: "ONLY DESI BEATS", body: "All night. If you came for Top 40, you're in the wrong room." },
-  { number: "02", title: "THE ROOM MOVES", body: "New city, new door every time. Follow the date, not the address." },
-  { number: "03", title: "EVERYONE'S FAMILY", body: "Come alone, leave with fifty cousins. Zero tolerance for anything that breaks that." },
+  {
+    number: "01",
+    title: "ONLY DESI BEATS",
+    body: "All night. If you came for Top 40, you're in the wrong room.",
+  },
+  {
+    number: "02",
+    title: "THE ROOM MOVES",
+    body: "New city, new door every time. Follow the date, not the address.",
+  },
+  {
+    number: "03",
+    title: "EVERYONE'S FAMILY",
+    body: "Come alone, leave with fifty cousins. Zero tolerance for anything that breaks that.",
+  },
 ] as const;
 
 async function loadAboutPage(): Promise<AboutPage> {
@@ -37,11 +50,35 @@ export default async function AboutPage() {
   const about = await loadAboutPage();
 
   return (
-    <div style={{ minHeight: "100vh", background: "var(--color-surface)", color: "var(--color-cream)", fontFamily: "var(--font-body)" }}>
+    <div
+      style={{
+        minHeight: "100vh",
+        background: "var(--color-surface)",
+        color: "var(--color-cream)",
+        fontFamily: "var(--font-body)",
+      }}
+    >
       <Header active="/about" />
 
-      <div style={{ maxWidth: 820, margin: "0 auto", padding: "90px 44px 60px" }}>
-        <div style={{ fontSize: 12, letterSpacing: "0.5em", color: "var(--color-lime)", marginBottom: 18 }}>THE STORY</div>
+      <div
+        style={{
+          maxWidth: 820,
+          margin: "0 auto",
+          padding: "90px var(--page-px) 60px",
+        }}
+      >
+        <div
+          style={{
+            fontFamily: "var(--font-label)",
+            fontWeight: 100,
+            fontSize: 12,
+            letterSpacing: "0.5em",
+            color: "var(--color-lime)",
+            marginBottom: 18,
+          }}
+        >
+          THE STORY
+        </div>
         <div
           style={{
             fontFamily: "var(--font-display)",
@@ -56,15 +93,25 @@ export default async function AboutPage() {
         >
           {about.heading}
         </div>
-        <div style={{ display: "flex", flexDirection: "column", gap: 26, fontSize: 17, lineHeight: 1.85, color: "rgba(242,233,221,0.85)", marginTop: 48 }}>
+        <div
+          style={{
+            display: "flex",
+            flexDirection: "column",
+            gap: 26,
+            fontSize: 17,
+            lineHeight: 1.85,
+            color: "rgba(242,233,221,0.85)",
+            marginTop: 48,
+          }}
+        >
           {about.storyParagraphs.map((paragraph, index) => (
             <div key={index}>{paragraph}</div>
           ))}
         </div>
       </div>
 
-      <div style={{ background: "#161616", padding: "80px 44px" }}>
-        <div style={{ maxWidth: 820, margin: "0 auto", display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))", gap: 28 }}>
+      <div style={{ background: "#161616", padding: "80px var(--page-px)" }}>
+        {/* <div style={{ maxWidth: 820, margin: "0 auto", display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))", gap: 28 }}>
           {PRINCIPLES.map((principle) => (
             <div key={principle.number} style={{ borderTop: "3px solid var(--color-lime)", paddingTop: 20 }}>
               <div style={{ fontFamily: "var(--font-brand)", fontWeight: 700, fontSize: 40, color: "var(--color-lime)", lineHeight: 1 }}>
@@ -74,7 +121,7 @@ export default async function AboutPage() {
               <div style={{ fontSize: 13, lineHeight: 1.7, color: "rgba(242,233,221,0.65)" }}>{principle.body}</div>
             </div>
           ))}
-        </div>
+        </div> */}
         <div
           style={{
             maxWidth: 820,
@@ -85,16 +132,29 @@ export default async function AboutPage() {
             flexWrap: "wrap",
             gap: 18,
             border: "1px solid var(--color-cream-a25)",
-            padding: "36px 44px",
+            padding: "36px var(--page-px)",
           }}
         >
-          <div style={{ fontFamily: "var(--font-display)", fontWeight: 700, fontSize: 30, lineHeight: 1 }}>
+          <div
+            style={{
+              fontFamily: "var(--font-display)",
+              fontWeight: 700,
+              fontSize: 30,
+              lineHeight: 1,
+            }}
+          >
             SOUND LIKE YOUR KIND OF NIGHT?
           </div>
           <Link
             href="/events"
             className="btn-solid"
-            style={{ padding: "15px 32px", borderRadius: 999, fontSize: 13, letterSpacing: "0.22em", fontWeight: 600 }}
+            style={{
+              padding: "15px 32px",
+              borderRadius: 999,
+              fontSize: 13,
+              letterSpacing: "0.22em",
+              fontWeight: 600,
+            }}
           >
             FIND THE DOOR →
           </Link>

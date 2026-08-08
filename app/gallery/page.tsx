@@ -30,8 +30,17 @@ export default async function GalleryPage() {
     <div style={{ minHeight: "100vh", background: "var(--color-surface)", color: "var(--color-cream)", fontFamily: "var(--font-body)" }}>
       <Header active="/gallery" />
 
-      <div style={{ padding: "80px 44px 30px", maxWidth: 1200, margin: "0 auto" }}>
-        <div style={{ fontSize: 12, letterSpacing: "0.5em", color: "var(--color-lime)", marginBottom: 18 }}>
+      <div style={{ padding: "80px var(--page-px) 30px", maxWidth: 1200, margin: "0 auto" }}>
+        <div
+          style={{
+            fontFamily: "var(--font-label)",
+            fontWeight: 100,
+            fontSize: 12,
+            letterSpacing: "0.5em",
+            color: "var(--color-lime)",
+            marginBottom: 18,
+          }}
+        >
           THE AFTERMATH
         </div>
         <div
@@ -53,7 +62,7 @@ export default async function GalleryPage() {
         </div>
       </div>
 
-      <div style={{ padding: "40px 44px 100px", maxWidth: 1200, margin: "0 auto", display: "flex", flexDirection: "column", gap: 80 }}>
+      <div style={{ padding: "40px var(--page-px) 100px", maxWidth: 1200, margin: "0 auto", display: "flex", flexDirection: "column", gap: 80 }}>
         {error && (
           <div style={{ border: "1px solid var(--color-cream-a25)", padding: "28px 32px", color: "var(--color-cream-a70)", fontSize: 14 }}>
             The gallery couldn&rsquo;t load right now. Check back shortly — new photos go up after every
@@ -72,7 +81,7 @@ export default async function GalleryPage() {
         <div
           style={{
             border: "1px solid var(--color-cream-a25)",
-            padding: "36px 44px",
+            padding: "36px var(--page-px)",
             display: "flex",
             alignItems: "center",
             justifyContent: "space-between",

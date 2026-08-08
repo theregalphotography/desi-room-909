@@ -1,13 +1,16 @@
 const CONTENTFUL_API_BASE = "https://cdn.contentful.com";
 const EVENT_GALLERY_CONTENT_TYPE = "eventGallery";
 const ABOUT_PAGE_CONTENT_TYPE = "aboutPage";
+const UPCOMING_TEASER_CONTENT_TYPE = "upcomingTeaser";
 export const GALLERY_CACHE_TAG = "gallery";
 export const ABOUT_PAGE_CACHE_TAG = "about-page";
+export const UPCOMING_TEASERS_CACHE_TAG = "upcoming-teasers";
 
 /** Maps a Contentful content type ID (from a webhook payload) to its cache tag. */
 export const CONTENTFUL_TAGS_BY_CONTENT_TYPE: Record<string, string> = {
   [EVENT_GALLERY_CONTENT_TYPE]: GALLERY_CACHE_TAG,
   [ABOUT_PAGE_CONTENT_TYPE]: ABOUT_PAGE_CACHE_TAG,
+  [UPCOMING_TEASER_CONTENT_TYPE]: UPCOMING_TEASERS_CACHE_TAG,
 };
 
 export interface GalleryPhoto {
@@ -179,6 +182,72 @@ export async function getAboutPage(): Promise<AboutPage | null> {
       .map((paragraph) => paragraph.trim())
       .filter(Boolean),
   };
+}
+
+export interface UpcomingTeaser {
+  id: string;
+  title: string;
+  timing: string;
+  posterUrl: string | null;
+}
+
+interface UpcomingTeaserEntry {
+  sys: { id: string };
+  fields: {
+    title?: string;
+    timing?: string;
+    order?: number;
+    poster?: { sys: { id: string } };
+  };
+}
+
+/**
+ * Fetches "coming soon" room teasers — rooms without a confirmed Eventbrite
+ * date/venue yet. No booking, no exact date; shown below the real Eventbrite
+ * hero event on Home and alongside bookable events on the Events page.
+ * Sorted by the optional `order` field (ascending); entries without one sort
+ * after all ordered entries, in the order Contentful returned them.
+ */
+export async function getUpcomingTeasers(): Promise<UpcomingTeaser[]> {
+  const { spaceId, accessToken } = getConfig();
+  const params = new URLSearchParams({
+    content_type: UPCOMING_TEASER_CONTENT_TYPE,
+    include: "1",
+    limit: "50",
+  });
+
+  const res = await fetch(
+    `${CONTENTFUL_API_BASE}/spaces/${spaceId}/environments/master/entries?${params}`,
+    {
+      headers: { Authorization: `Bearer ${accessToken}` },
+      cache: "force-cache",
+      next: { tags: [UPCOMING_TEASERS_CACHE_TAG] },
+    }
+  );
+
+  if (!res.ok) {
+    throw new Error(`Contentful request failed: ${res.status} ${res.statusText}`);
+  }
+
+  const data: { items: UpcomingTeaserEntry[]; includes?: { Asset?: ContentfulAsset[] } } = await res.json();
+  const assetsById = new Map((data.includes?.Asset ?? []).map((asset) => [asset.sys.id, asset]));
+
+  return data.items
+    .map((entry, index) => {
+      const poster = entry.fields.poster ? mapAsset(assetsById.get(entry.fields.poster.sys.id), "teaser") : null;
+      return {
+        teaser: {
+          id: entry.sys.id,
+          title: entry.fields.title ?? "Untitled Room",
+          timing: entry.fields.timing ?? "",
+          posterUrl: poster?.url ?? null,
+        },
+        // Entries without an explicit order sort after ordered ones, preserving fetch order.
+        sortKey: entry.fields.order ?? 10_000 + index,
+      };
+    })
+    .sort((a, b) => a.sortKey - b.sortKey)
+    .map(({ teaser }) => teaser);
 }
 
 export function formatEventMeta(eventDate: string): string {

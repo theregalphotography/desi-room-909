@@ -130,13 +130,9 @@ export async function getEventBySlug(slug: string): Promise<EventbriteEvent | nu
   return events.find((event) => event.slug === slug) ?? null;
 }
 
-/** Pure selection helpers over an already-fetched, sorted upcoming list. */
+/** Pure selection helper over an already-fetched, sorted upcoming list. */
 export function selectHeroEvent(upcoming: EventbriteEvent[]): EventbriteEvent | null {
   return upcoming[0] ?? null;
-}
-
-export function selectNextEditions(upcoming: EventbriteEvent[], count: number): EventbriteEvent[] {
-  return upcoming.slice(1, 1 + count);
 }
 
 export function formatEventDateBadge(startIso: string, timeZone: string): string {

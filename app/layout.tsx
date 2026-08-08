@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { archivo, bigShoulders, fredoka } from "./fonts";
+import { bigShoulders, fredoka, raleway, sora } from "./fonts";
 import "./globals.css";
 
 export const metadata: Metadata = {
@@ -20,7 +20,10 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en" className={`${bigShoulders.variable} ${fredoka.variable} ${archivo.variable}`}>
+    <html
+      lang="en"
+      className={`${bigShoulders.variable} ${fredoka.variable} ${raleway.variable} ${sora.variable}`}
+    >
       <body
         style={{
           minHeight: "100vh",

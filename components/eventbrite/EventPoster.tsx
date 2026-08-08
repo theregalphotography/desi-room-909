@@ -6,6 +6,7 @@ interface EventPosterProps {
   alt: string;
   sizes?: string;
   style?: CSSProperties;
+  className?: string;
   grayscale?: boolean;
 }
 
@@ -14,10 +15,11 @@ export default function EventPoster({
   alt,
   sizes = "(max-width: 768px) 90vw, 420px",
   style,
+  className,
   grayscale,
 }: EventPosterProps) {
   return (
-    <div style={{ position: "relative", background: "#181818", overflow: "hidden", ...style }}>
+    <div className={className} style={{ position: "relative", background: "#181818", overflow: "hidden", ...style }}>
       {src && (
         <Image
           src={src}

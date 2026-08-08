@@ -4,10 +4,11 @@
  *
  * Run with:
  *   npx contentful-migration --space-id <SPACE_ID> --environment-id master \
- *     --content-file contentful/migrations/001-initial-content-types.js
+ *     --access-token <CMA_TOKEN> --yes \
+ *     contentful/migrations/001-initial-content-types.js
  *
- * Requires a Content Management API token, e.g. via `npx contentful login`,
- * or pass one directly with --management-token <CMA_TOKEN>.
+ * The script path is a positional argument, not a flag. --access-token takes
+ * a Content Management API token (not the runtime Delivery API token).
  */
 module.exports = function (migration) {
   const eventGallery = migration.createContentType("eventGallery", {
