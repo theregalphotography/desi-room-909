@@ -15,10 +15,23 @@ export default function Footer() {
       }}
     >
       <Logo size={18} strokeColor="rgba(242,233,221,0.8)" />
-      <div style={{ fontSize: 11, letterSpacing: "0.35em", color: "var(--color-cream-a55)" }}>
+      <div
+        style={{
+          fontSize: 11,
+          letterSpacing: "0.35em",
+          color: "var(--color-cream-a55)",
+        }}
+      >
         YOUR SECRET NIGHT OUT
       </div>
-      <div style={{ display: "flex", gap: 24, fontSize: 12, letterSpacing: "0.22em" }}>
+      <div
+        style={{
+          display: "flex",
+          gap: 24,
+          fontSize: 12,
+          letterSpacing: "0.22em",
+        }}
+      >
         <a
           href="https://instagram.com/desiroom909"
           target="_blank"
@@ -27,7 +40,12 @@ export default function Footer() {
         >
           INSTAGRAM
         </a>
-        <a href="https://wa.me/10000000000" target="_blank" rel="noopener noreferrer" className="footer-link">
+        <a
+          href="https://wa.me/19803310225"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="footer-link"
+        >
           WHATSAPP
         </a>
       </div>

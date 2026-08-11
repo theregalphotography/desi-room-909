@@ -66,17 +66,21 @@ unpublish/delete the teaser once the real event goes live in Eventbrite** — th
 detect or dedupe this automatically, so both a teaser and the real event can show
 simultaneously if forgotten.
 
-### `heroEventPoster` (Home "Happening Next" hero, poster override, singleton)
+### `heroEventPoster` (soonest-upcoming event's poster override, singleton)
 
 | Field | Type | Notes |
 |---|---|---|
-| `poster` | Link:Asset | Replaces the hero poster image |
+| `poster` | Link:Asset | Replaces the poster image for the soonest-upcoming event |
 
 **This is the one exception to "Contentful never cross-references Eventbrite."** Every other
-hero detail — name, date, venue, ticket availability — still comes straight from Eventbrite;
-only the poster image is swappable. Same singleton pattern as `aboutPage`: only one entry
-should ever be published, the app always reads the first one it finds, and publishing nothing
-here is safe — the hero falls back to that event's own Eventbrite logo automatically.
+detail — name, date, venue, ticket availability — still comes straight from Eventbrite; only
+the poster image is swappable. Same singleton pattern as `aboutPage`: only one entry should
+ever be published, the app always reads the first one it finds, and publishing nothing here is
+safe — it falls back to that event's own Eventbrite logo automatically.
+
+Applied in two places, both keyed off the same "soonest-upcoming" event so they always agree:
+the Home "Happening Next" hero, and that same event's tile in the Events page's upcoming grid
+(every other tile in that grid keeps its Eventbrite image).
 
 The hero only ever shows one event at a time, so there's no event-matching. **Client must
 update (or unpublish) this entry when the featured event changes** — same manual-upkeep risk
