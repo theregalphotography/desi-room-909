@@ -72,7 +72,7 @@ button {
   z-index: 60;
   opacity: 0.55;
   mix-blend-mode: soft-light;
-  background-image: url('data:image/svg+xml,%3Csvg%20xmlns=%27http://www.w3.org/2000/svg%27%20width=%27300%27%20height=%27300%27%3E%3Cfilter%20id=%27n%27%3E%3CfeTurbulence%20type=%27fractalNoise%27%20baseFrequency=%270.8%27%20numOctaves=%272%27/%3E%3C/filter%3E%3Crect%20width=%27300%27%20height=%27300%27%20filter=%27url(%23n)%27%20opacity=%270.6%27/%3E%3C/svg%3E');
+  background-image: url("data:image/svg+xml,%3Csvg%20xmlns=%27http://www.w3.org/2000/svg%27%20width=%27300%27%20height=%27300%27%3E%3Cfilter%20id=%27n%27%3E%3CfeTurbulence%20type=%27fractalNoise%27%20baseFrequency=%270.8%27%20numOctaves=%272%27/%3E%3C/filter%3E%3Crect%20width=%27300%27%20height=%27300%27%20filter=%27url(%23n)%27%20opacity=%270.6%27/%3E%3C/svg%3E");
 }
 
 .nav-link {
@@ -206,7 +206,9 @@ button {
   padding: 18px 2px;
   border-bottom: 1px solid var(--color-cream-a18);
   color: var(--color-cream);
-  transition: border-color 0.15s, color 0.15s;
+  transition:
+    border-color 0.15s,
+    color 0.15s;
 }
 
 .contact-row-link:hover {
@@ -284,6 +286,25 @@ button {
   .home-hero-grid {
     grid-template-columns: 420px 1fr;
     gap: 64px;
+  }
+}
+
+/* "HAPPENING NEXT" ribbon on the hero poster: the large negative offset that
+   makes it read as a diagonal corner ribbon on desktop pushes it past the
+   viewport edge on mobile, where there's much less room to the left of the
+   poster. Pull it in and soften the angle below the grid's own breakpoint. */
+.happening-next-badge {
+  position: absolute;
+  top: -30px;
+  left: -10px;
+  transform: rotate(-5deg);
+}
+
+@media (min-width: 768px) {
+  .happening-next-badge {
+    top: -30px;
+    left: -25px;
+    transform: rotate(-12deg);
   }
 }
 
