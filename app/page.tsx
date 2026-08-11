@@ -84,7 +84,7 @@ export default async function HomePage() {
             position: "absolute",
             inset: 0,
             background:
-              "url('https://images.unsplash.com/photo-1501281668745-f7f57925c3b4?auto=format&fit=crop&w=1600&q=80') center/cover no-repeat #151515",
+              "url('/hero/equalizer-bg.png') center/cover no-repeat #050202",
           }}
         />
         <div
@@ -240,17 +240,14 @@ export default async function HomePage() {
           >
             <div style={{ position: "relative" }}>
               <div
+                className="happening-next-badge"
                 style={{
-                  position: "absolute",
-                  top: -30,
-                  left: -60,
                   background: "var(--color-lime)",
                   color: "var(--color-bg)",
                   padding: "9px 20px",
                   fontSize: 11,
                   letterSpacing: "0.3em",
                   fontWeight: 600,
-                  transform: "rotate(-12deg)",
                   zIndex: 2,
                 }}
               >
@@ -359,6 +356,7 @@ export default async function HomePage() {
                 style={{
                   display: "flex",
                   alignItems: "center",
+                  flexWrap: "wrap",
                   gap: 18,
                   marginTop: 12,
                 }}
@@ -376,6 +374,8 @@ export default async function HomePage() {
                       fontWeight: 600,
                       border: "none",
                       cursor: "pointer",
+                      whiteSpace: "nowrap",
+                      flexShrink: 0,
                     }}
                   />
                 ) : (
@@ -388,6 +388,8 @@ export default async function HomePage() {
                       fontSize: 13,
                       letterSpacing: "0.22em",
                       fontWeight: 600,
+                      whiteSpace: "nowrap",
+                      flexShrink: 0,
                     }}
                   >
                     SOLD OUT
@@ -400,7 +402,7 @@ export default async function HomePage() {
                     color: "var(--color-cream-a55)",
                   }}
                 >
-                  SELLING FAST — CAPACITY IS REAL
+                  SELLING FAST, CAPACITY IS REAL
                 </div>
               </div>
             </div>
