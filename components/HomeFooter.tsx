@@ -116,7 +116,7 @@ export default function HomeFooter() {
               INSTAGRAM
             </a>
             <a
-              href="https://wa.me/10000000000"
+              href="https://wa.me/19803310225"
               target="_blank"
               rel="noopener noreferrer"
               className="footer-link"
