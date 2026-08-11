@@ -12,7 +12,11 @@ import {
   selectHeroEvent,
   type EventbriteEvent,
 } from "@/lib/eventbrite";
-import { getHeroEventPoster, getUpcomingTeasers, type UpcomingTeaser } from "@/lib/contentful";
+import {
+  getHeroEventPoster,
+  getUpcomingTeasers,
+  type UpcomingTeaser,
+} from "@/lib/contentful";
 
 export const revalidate = 300;
 
@@ -238,15 +242,15 @@ export default async function HomePage() {
               <div
                 style={{
                   position: "absolute",
-                  top: 18,
-                  left: -14,
+                  top: -30,
+                  left: -60,
                   background: "var(--color-lime)",
                   color: "var(--color-bg)",
                   padding: "9px 20px",
                   fontSize: 11,
                   letterSpacing: "0.3em",
                   fontWeight: 600,
-                  transform: "rotate(-2deg)",
+                  transform: "rotate(-12deg)",
                   zIndex: 2,
                 }}
               >
@@ -606,7 +610,8 @@ export default async function HomePage() {
             margin: "26px auto 0",
           }}
         >
-          First to see it. First to get in. That&rsquo;s what following @desiroom909 gets you.
+          First to see it. First to get in. That&rsquo;s what following
+          @desiroom909 gets you.
         </div>
         <div
           style={{
