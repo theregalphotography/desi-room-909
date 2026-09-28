@@ -253,27 +253,32 @@ export async function getUpcomingTeasers(): Promise<UpcomingTeaser[]> {
     .map(({ teaser }) => teaser);
 }
 
+/** Key used for a poster entry with no `eventId` set — applies to whichever
+ * event the caller treats as primary (Home's first card, Events' soonest
+ * event), so existing single-entry setups keep working unchanged. */
+export const DEFAULT_HERO_POSTER_KEY = "default";
+
 interface HeroEventPosterEntry {
   fields: {
+    eventId?: string;
     poster?: { sys: { id: string } };
   };
 }
 
 /**
- * Fetches the singleton poster override for the Home "Happening Next" hero.
- * All other hero details (name, date, venue, tickets) still come from
- * Eventbrite — this only swaps the image. Returns null if no entry has been
- * published yet, so the caller can fall back to the event's own Eventbrite
- * logo. The hero only ever shows one event at a time, so there's no
- * event-matching here — the client is responsible for updating this entry
- * when the featured event changes.
+ * Fetches Home "Happening Next" poster overrides, keyed by Eventbrite event
+ * ID (or `DEFAULT_HERO_POSTER_KEY` for an entry with no `eventId` set). All
+ * other event details (name, date, venue, tickets) still come from
+ * Eventbrite — this only swaps the image. Two published events need two
+ * entries in Contentful: one with `eventId` matching the second event's
+ * Eventbrite ID, so it doesn't collide with the default/primary poster.
  */
-export async function getHeroEventPoster(): Promise<string | null> {
+export async function getHeroEventPosters(): Promise<Record<string, string>> {
   const { spaceId, accessToken } = getConfig();
   const params = new URLSearchParams({
     content_type: HERO_EVENT_POSTER_CONTENT_TYPE,
     include: "1",
-    limit: "1",
+    limit: "10",
   });
 
   const res = await fetch(
@@ -292,11 +297,14 @@ export async function getHeroEventPoster(): Promise<string | null> {
   const data: { items: HeroEventPosterEntry[]; includes?: { Asset?: ContentfulAsset[] } } = await res.json();
   const assetsById = new Map((data.includes?.Asset ?? []).map((asset) => [asset.sys.id, asset]));
 
-  const entry = data.items[0];
-  if (!entry?.fields.poster) return null;
-
-  const poster = mapAsset(assetsById.get(entry.fields.poster.sys.id), "hero-poster");
-  return poster?.url ?? null;
+  const posters: Record<string, string> = {};
+  for (const entry of data.items) {
+    if (!entry.fields.poster) continue;
+    const poster = mapAsset(assetsById.get(entry.fields.poster.sys.id), "hero-poster");
+    if (!poster) continue;
+    posters[entry.fields.eventId?.trim() || DEFAULT_HERO_POSTER_KEY] = poster.url;
+  }
+  return posters;
 }
 
 export function formatEventMeta(eventDate: string): string {

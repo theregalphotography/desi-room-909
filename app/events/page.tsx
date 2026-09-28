@@ -11,7 +11,12 @@ import {
   selectHeroEvent,
   type EventbriteEvent,
 } from "@/lib/eventbrite";
-import { getHeroEventPoster, getUpcomingTeasers, type UpcomingTeaser } from "@/lib/contentful";
+import {
+  DEFAULT_HERO_POSTER_KEY,
+  getHeroEventPosters,
+  getUpcomingTeasers,
+  type UpcomingTeaser,
+} from "@/lib/contentful";
 
 export const revalidate = 300;
 
@@ -19,8 +24,6 @@ export const metadata: Metadata = {
   title: "Events",
   description: "No fixed address. Every 909 is a one-night takeover — find the door before it's gone.",
 };
-
-const TICKETS_URL = "https://buytickets.at/desiroom909";
 
 async function loadEvents(): Promise<{ upcoming: EventbriteEvent[]; past: EventbriteEvent[] }> {
   try {
@@ -39,21 +42,21 @@ async function loadTeasers(): Promise<UpcomingTeaser[]> {
   }
 }
 
-async function loadHeroPoster(): Promise<string | null> {
+async function loadHeroPosters(): Promise<Record<string, string>> {
   try {
-    return await getHeroEventPoster();
+    return await getHeroEventPosters();
   } catch {
-    return null;
+    return {};
   }
 }
 
 export default async function EventsPage() {
   const [{ upcoming, past }, teasers] = await Promise.all([loadEvents(), loadTeasers()]);
   const heroEvent = selectHeroEvent(upcoming);
-  const heroPosterUrl = heroEvent ? await loadHeroPoster() : null;
+  const heroPosters = heroEvent ? await loadHeroPosters() : {};
 
   return (
-    <div style={{ minHeight: "100vh", background: "var(--color-surface)", color: "var(--color-cream)", fontFamily: "var(--font-body)" }}>
+    <div id="top" style={{ minHeight: "100vh", background: "var(--color-surface)", color: "var(--color-cream)", fontFamily: "var(--font-body)" }}>
       <Header active="/events" />
 
       <div style={{ padding: "80px var(--page-px) 30px", maxWidth: 1200, margin: "0 auto" }}>
@@ -143,7 +146,11 @@ export default async function EventsPage() {
                   </div>
                 )}
                 <EventPoster
-                  src={event.id === heroEvent?.id ? (heroPosterUrl ?? event.logoUrl) : event.logoUrl}
+                  src={
+                    heroPosters[event.id] ??
+                    (event.id === heroEvent?.id ? heroPosters[DEFAULT_HERO_POSTER_KEY] : undefined) ??
+                    event.logoUrl
+                  }
                   alt={event.name}
                   sizes="(max-width: 640px) 90vw, 380px"
                   style={{
@@ -271,9 +278,7 @@ export default async function EventsPage() {
                 Don&rsquo;t end up on this list again.
               </div>
               <a
-                href={TICKETS_URL}
-                target="_blank"
-                rel="noopener noreferrer"
+                href="#top"
                 className="btn-solid"
                 style={{ padding: "14px 30px", borderRadius: 999, fontSize: 12, letterSpacing: "0.22em", fontWeight: 600 }}
               >

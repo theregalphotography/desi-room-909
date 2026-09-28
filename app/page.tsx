@@ -3,17 +3,18 @@ import Header from "@/components/Header";
 import HomeFooter from "@/components/HomeFooter";
 import ComingSoonCard from "@/components/ComingSoonCard";
 import EventPoster from "@/components/eventbrite/EventPoster";
+import HeroPairCard from "@/components/eventbrite/HeroPairCard";
 import TicketWidget from "@/components/eventbrite/TicketWidget";
 import {
   formatEventDateBadge,
   formatEventTimeRange,
   formatShortEventDate,
   getUpcomingEvents,
-  selectHeroEvent,
   type EventbriteEvent,
 } from "@/lib/eventbrite";
 import {
-  getHeroEventPoster,
+  DEFAULT_HERO_POSTER_KEY,
+  getHeroEventPosters,
   getUpcomingTeasers,
   type UpcomingTeaser,
 } from "@/lib/contentful";
@@ -43,11 +44,11 @@ async function loadTeasers(): Promise<UpcomingTeaser[]> {
   }
 }
 
-async function loadHeroPoster(): Promise<string | null> {
+async function loadHeroPosters(): Promise<Record<string, string>> {
   try {
-    return await getHeroEventPoster();
+    return await getHeroEventPosters();
   } catch {
-    return null;
+    return {};
   }
 }
 
@@ -56,8 +57,14 @@ export default async function HomePage() {
     loadUpcoming(),
     loadTeasers(),
   ]);
-  const hero = selectHeroEvent(upcoming);
-  const heroPosterUrl = hero ? await loadHeroPoster() : null;
+  // At most two published events show on the homepage — the rest live on /events.
+  const heroEvents = upcoming.slice(0, 2);
+  const heroPosters = heroEvents.length > 0 ? await loadHeroPosters() : {};
+  const hero = heroEvents[0];
+  const heroPosterUrl =
+    (hero && heroPosters[hero.id]) ??
+    heroPosters[DEFAULT_HERO_POSTER_KEY] ??
+    null;
   const visibleTeasers = teasers.slice(0, 2);
 
   return (
@@ -84,7 +91,7 @@ export default async function HomePage() {
             position: "absolute",
             inset: 0,
             background:
-              "url('/hero/equalizer-bg.png') center/cover no-repeat #050202",
+              "url('/hero/Desiroom.jpeg') center/cover no-repeat #050202",
           }}
         />
         <div
@@ -92,7 +99,8 @@ export default async function HomePage() {
             position: "absolute",
             inset: 0,
             background:
-              "linear-gradient(180deg, rgba(0,0,0,0.72), rgba(10,10,10,0.6) 45%, rgba(0,0,0,0.95))",
+              "radial-gradient(ellipse 65% 55% at 50% 50%, rgba(0,0,0,0.62) 0%, rgba(0,0,0,0.35) 45%, rgba(0,0,0,0) 80%), " +
+              "linear-gradient(180deg, rgba(0,0,0,0.65) 0%, rgba(0,0,0,0.15) 12%, rgba(0,0,0,0.05) 25%, rgba(0,0,0,0.05) 65%, rgba(0,0,0,0.45) 100%)",
           }}
         />
         <div style={{ position: "relative" }}>
@@ -221,8 +229,42 @@ export default async function HomePage() {
         </div>
       </div>
 
-      {/* Happening next */}
-      {!error && hero && (
+      {/* Happening next — two published events side by side */}
+      {!error && heroEvents.length > 1 && (
+        <div
+          style={{
+            background: "#0A0A0A",
+            borderBottom: "1px solid rgba(242,233,221,0.14)",
+          }}
+        >
+          <div
+            className="home-hero-pair"
+            style={{
+              maxWidth: 1200,
+              margin: "0 auto",
+              padding: "90px var(--page-px)",
+            }}
+          >
+            {heroEvents.map((event, i) => (
+              <HeroPairCard
+                key={event.id}
+                event={event}
+                // The legacy no-`eventId` poster entry only ever overrode a
+                // single hero, so it stays scoped to the first (soonest)
+                // event here too — otherwise both cards would show the same
+                // image until a second, `eventId`-tagged entry is added.
+                posterOverride={
+                  heroPosters[event.id] ??
+                  (i === 0 ? heroPosters[DEFAULT_HERO_POSTER_KEY] : undefined)
+                }
+              />
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Happening next — a single published event */}
+      {!error && heroEvents.length === 1 && hero && (
         <div
           style={{
             background: "#0A0A0A",
@@ -487,8 +529,7 @@ export default async function HomePage() {
           position: "relative",
           padding: "120px var(--page-px)",
           overflow: "hidden",
-          background:
-            "url('https://images.unsplash.com/photo-1470229722913-7c0e2dbbafd3?auto=format&fit=crop&w=1600&q=80') center/cover no-repeat #1A1A1A",
+          background: "url('hero/defines.jpeg') center/cover no-repeat #1A1A1A",
         }}
       >
         <div
@@ -496,7 +537,8 @@ export default async function HomePage() {
             position: "absolute",
             inset: 0,
             background:
-              "linear-gradient(180deg, rgba(0,0,0,0.78), rgba(20,20,20,0.66))",
+              "radial-gradient(ellipse 38% 55% at 50% 50%, rgba(0,0,0,0.55) 0%, rgba(0,0,0,0.22) 50%, rgba(0,0,0,0) 78%), " +
+              "linear-gradient(180deg, rgba(0,0,0,0.22) 0%, rgba(0,0,0,0.04) 20%, rgba(0,0,0,0.04) 75%, rgba(0,0,0,0.28) 100%)",
           }}
         />
         <div
