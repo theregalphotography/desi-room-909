@@ -41,6 +41,10 @@ body {
   margin: 0;
 }
 
+html {
+  scroll-behavior: smooth;
+}
+
 body {
   background: var(--color-bg);
   font-family: var(--font-body);
@@ -289,6 +293,38 @@ button {
   }
 }
 
+/* Two published events shown side by side on Home (HeroPairCard). Each card
+   stacks poster-over-details starting at the iPad breakpoint; the pair
+   itself stacks fully under mobile, matching .home-hero-grid's own
+   mobile-vs-desktop split above. */
+.home-hero-pair {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 48px;
+}
+
+@media (max-width: 767px) {
+  .home-hero-pair {
+    grid-template-columns: 1fr;
+    gap: 64px;
+  }
+}
+
+.home-hero-card {
+  display: grid;
+  grid-template-columns: 300px 1fr;
+  gap: 22px;
+  align-items: center;
+  min-width: 0;
+}
+
+@media (max-width: 1024px) {
+  .home-hero-card {
+    grid-template-columns: 1fr;
+    gap: 32px;
+  }
+}
+
 /* "HAPPENING NEXT" ribbon on the hero poster: the large negative offset that
    makes it read as a diagonal corner ribbon on desktop pushes it past the
    viewport edge on mobile, where there's much less room to the left of the
@@ -304,7 +340,7 @@ button {
   .happening-next-badge {
     top: -30px;
     left: -25px;
-    transform: rotate(-12deg);
+    transform: rotate(-5deg);
   }
 }
 

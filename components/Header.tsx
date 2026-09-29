@@ -38,7 +38,6 @@ export default function Header({ active }: HeaderProps) {
           style={{
             alignItems: "center",
             gap: 34,
-            fontFamily: "var(--font-label)",
             fontSize: 13,
             letterSpacing: "0.28em",
             fontWeight: 100,
@@ -85,7 +84,11 @@ export default function Header({ active }: HeaderProps) {
               key={item.href}
               href={item.href}
               onClick={() => setOpen(false)}
-              className={item.href === active ? "nav-mobile-link nav-mobile-link-active" : "nav-mobile-link"}
+              className={
+                item.href === active
+                  ? "nav-mobile-link nav-mobile-link-active"
+                  : "nav-mobile-link"
+              }
             >
               {item.label}
             </Link>

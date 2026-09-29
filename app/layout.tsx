@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { bigShoulders, fredoka, raleway, sora } from "./fonts";
+import { aBoxFor, bigShoulders, fredoka, raleway, sora, striker } from "./fonts";
 import "./globals.css";
 
 export const metadata: Metadata = {
@@ -22,7 +22,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html
       lang="en"
-      className={`${bigShoulders.variable} ${fredoka.variable} ${raleway.variable} ${sora.variable}`}
+      className={`${aBoxFor.variable} ${bigShoulders.variable} ${fredoka.variable} ${raleway.variable} ${sora.variable} ${striker.variable}`}
     >
       <body
         style={{
