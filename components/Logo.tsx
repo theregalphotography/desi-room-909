@@ -1,19 +1,21 @@
 interface LogoProps {
   size?: number;
-  strokeColor?: string;
+  textColor?: string;
 }
 
-export default function Logo({ size = 23, strokeColor = "var(--color-cream)" }: LogoProps) {
+export default function Logo({
+  size = 28,
+  textColor = "var(--color-cream)",
+}: LogoProps) {
   return (
     <span style={{ display: "flex", alignItems: "baseline", gap: 9 }}>
       <span
         style={{
-          fontFamily: "var(--font-display)",
+          fontFamily: "var(--font-striker)",
           fontWeight: 700,
           fontSize: size,
           letterSpacing: "0.1em",
-          color: "transparent",
-          WebkitTextStroke: `1px ${strokeColor}`,
+          color: textColor,
           whiteSpace: "nowrap",
         }}
       >
@@ -21,7 +23,7 @@ export default function Logo({ size = 23, strokeColor = "var(--color-cream)" }: 
       </span>
       <span
         style={{
-          fontFamily: "var(--font-brand)",
+          fontFamily: "var(--font-striker)",
           fontWeight: 700,
           fontSize: size,
           color: "var(--color-lime)",

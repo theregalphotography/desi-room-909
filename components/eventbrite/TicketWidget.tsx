@@ -1,7 +1,7 @@
 "use client";
 
 import Script from "next/script";
-import { useRef, type CSSProperties } from "react";
+import { useEffect, useRef, type CSSProperties } from "react";
 
 declare global {
   interface Window {
@@ -43,6 +43,25 @@ export default function TicketWidget({ eventId, label = "GET TICKETS", className
     });
     registered.current = true;
   }
+
+  // With two TicketWidget instances sharing the same script src (Home's
+  // two-event pair), onReady can fire for one instance before
+  // window.EBWidgets is actually assigned — that instance's button would
+  // then silently never get a click handler. Poll as a fallback so a
+  // missed onReady doesn't leave the button permanently dead.
+  useEffect(() => {
+    if (registered.current) return;
+    if (window.EBWidgets) {
+      registerWidget();
+      return;
+    }
+    const interval = setInterval(() => {
+      if (!window.EBWidgets) return;
+      registerWidget();
+      clearInterval(interval);
+    }, 150);
+    return () => clearInterval(interval);
+  }, []);
 
   return (
     <>

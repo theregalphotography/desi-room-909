@@ -14,7 +14,7 @@ export default function Footer() {
         gap: 20,
       }}
     >
-      <Logo size={18} strokeColor="rgba(242,233,221,0.8)" />
+      <Logo size={18} textColor="rgba(242,233,221,0.8)" />
       <div
         style={{
           fontSize: 11,

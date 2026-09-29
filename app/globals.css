@@ -340,7 +340,7 @@ button {
   .happening-next-badge {
     top: -30px;
     left: -25px;
-    transform: rotate(-12deg);
+    transform: rotate(-5deg);
   }
 }
 

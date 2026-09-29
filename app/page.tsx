@@ -130,11 +130,11 @@ export default async function HomePage() {
           >
             <span
               style={{
-                fontFamily: "var(--font-display)",
+                fontFamily: "var(--font-a-box-for)",
                 fontWeight: 800,
-                fontSize: "clamp(26px,9vw,130px)",
+                fontSize: "clamp(26px,15vw,150px)",
                 lineHeight: 0.9,
-                letterSpacing: "0.04em",
+                letterSpacing: "0.1em",
                 color: "transparent",
                 WebkitTextStroke: "2.5px var(--color-cream)",
                 whiteSpace: "nowrap",
@@ -144,10 +144,11 @@ export default async function HomePage() {
             </span>
             <span
               style={{
-                fontFamily: "var(--font-brand)",
-                fontWeight: 700,
-                fontSize: "clamp(29px,10vw,150px)",
+                fontFamily: "var(--font-a-box-for)",
+                fontWeight: 400,
+                fontSize: "clamp(29px,15vw,150px)",
                 lineHeight: 0.9,
+                letterSpacing: "0.04em",
                 color: "var(--color-lime)",
                 whiteSpace: "nowrap",
               }}
@@ -240,7 +241,7 @@ export default async function HomePage() {
           <div
             className="home-hero-pair"
             style={{
-              maxWidth: 1200,
+              maxWidth: 1400,
               margin: "0 auto",
               padding: "90px var(--page-px)",
             }}
