@@ -1,23 +1,23 @@
-import EventPoster from "@/components/eventbrite/EventPoster";
-import TicketWidget from "@/components/eventbrite/TicketWidget";
+import EventPoster from "@/components/tickets/EventPoster";
+import TicketButton from "@/components/tickets/TicketButton";
 import {
   formatEventDateBadge,
   formatEventTimeRange,
   formatShortEventDate,
-  type EventbriteEvent,
-} from "@/lib/eventbrite";
+  type TicketEvent,
+} from "@/lib/events";
 
 /**
  * One event in the homepage's two-up "Happening Next" row (see
  * `.home-hero-pair` / `.home-hero-card` in globals.css for the breakpoints).
- * Only used when there are 2 published Eventbrite events — with exactly one,
+ * Only used when there are 2 published Ticket Tailor events — with exactly one,
  * the page renders the original full-size single-hero markup instead.
  */
 export default function HeroPairCard({
   event,
   posterOverride,
 }: {
-  event: EventbriteEvent;
+  event: TicketEvent;
   posterOverride?: string | null;
 }) {
   return (
@@ -38,7 +38,7 @@ export default function HeroPairCard({
           HAPPENING NEXT
         </div>
         <EventPoster
-          src={posterOverride ?? event.logoUrl}
+          src={posterOverride ?? event.posterUrl}
           alt={event.name}
           sizes="(max-width: 1024px) 90vw, 300px"
           style={{
@@ -99,8 +99,9 @@ export default function HeroPairCard({
         </div>
         <div style={{ display: "flex", alignItems: "center", flexWrap: "wrap", gap: 12, marginTop: 4 }}>
           {event.hasAvailableTickets ? (
-            <TicketWidget
-              eventId={event.id}
+            <TicketButton
+              checkoutUrl={event.checkoutUrl}
+              eventName={event.name}
               label="GET TICKETS"
               className="btn-solid"
               style={{
