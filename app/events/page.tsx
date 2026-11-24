@@ -248,13 +248,12 @@ export default async function EventsPage() {
                     src={event.posterUrl}
                     alt={event.name}
                     sizes="110px"
-                    grayscale
                     className="events-past-thumb"
                     style={{ border: "1px solid var(--color-cream-a20)" }}
                   />
                   <div className="events-past-info">
                     <div style={{ fontSize: 11, letterSpacing: "0.3em", color: "var(--color-cream-a55)", marginBottom: 8 }}>
-                      {formatPastEventDate(event.endUtc, event.timezone)} · {event.venueName}
+                      {formatPastEventDate(event.startUtc, event.timezone)} · {event.venueName}
                     </div>
                     <div style={{ fontFamily: "var(--font-display)", fontWeight: 700, fontSize: 34, lineHeight: 1 }}>{event.name}</div>
                   </div>

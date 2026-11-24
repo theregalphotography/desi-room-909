@@ -20,7 +20,7 @@ export default function ComingSoonCard({ teaser }: { teaser: UpcomingTeaser }) {
             alt={teaser.title}
             fill
             sizes="(max-width: 768px) 90vw, 45vw"
-            style={{ objectFit: "cover", opacity: 0.6, filter: "grayscale(0.4)" }}
+            style={{ objectFit: "cover" }}
           />
         )}
       </div>

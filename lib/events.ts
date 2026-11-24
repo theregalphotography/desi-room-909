@@ -89,8 +89,12 @@ export function formatEventTimeRange(startIso: string, endIso: string, timeZone:
   return `${formatter.format(new Date(startIso))} – ${formatter.format(new Date(endIso))}`;
 }
 
-export function formatPastEventDate(endIso: string, timeZone: string): string {
-  const date = new Date(endIso);
+/**
+ * Date label for "Rooms We Left Behind". Pass the event's START time: nights
+ * run past midnight, so the end time would show the morning after.
+ */
+export function formatPastEventDate(startIso: string, timeZone: string): string {
+  const date = new Date(startIso);
   return new Intl.DateTimeFormat("en-US", { month: "short", day: "numeric", year: "numeric", timeZone })
     .format(date)
     .toUpperCase();
