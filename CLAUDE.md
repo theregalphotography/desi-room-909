@@ -11,56 +11,96 @@ This block is written and re-added by `next dev` — verify at `node_modules/nex
 
 # Desi Room 909 — agent context
 
-Marketing + ticketing site for Desi Room 909, a ticketed South Asian nightlife pop-up brand (Charlotte, NC). Mostly server-rendered pages reading two headless sources: **Eventbrite** (events and tickets) and **Contentful** (galleries, About copy, teasers, poster overrides). There is no database, no auth, no first-party payments, and no analytics.
+Marketing and ticketing site for Desi Room 909, a ticketed South Asian nightlife pop-up brand (Charlotte, NC). Production domain: **https://www.desiroom909.com**. Pages are mostly server-rendered and read from two headless sources:
+- **Ticket Tailor:** events and tickets. It replaced Eventbrite; past Eventbrite events survive as a static snapshot.
+- **Contentful:** galleries, About copy, teasers and poster overrides.
+
+There is no database, no auth, no first-party payments and no analytics.
 
 ## 1. Tech stack
 
-- **Next.js 16.3 (App Router)**, React 19.2, TypeScript 5.9 (`strict`). Only runtime deps: `next`, `react`, `react-dom`. No CSS framework, no data SDKs; both APIs are called with raw `fetch`.
+- **Next.js 16.3 (App Router)**, React 19.2, TypeScript 5.9 (`strict`). Only runtime deps: `next`, `react`, `react-dom`. There is no CSS framework and no data SDK; both APIs are called with raw `fetch`.
 - Path alias `@/*` → repo root (`tsconfig.json`).
-- Styling: mostly **inline `style={{}}` objects** plus design tokens and hover/responsive classes in `app/globals.css` (`--color-*`, `--font-*`, `--page-px`, `.btn-solid`, `.btn-outline`, `.home-hero-*`, `.responsive-cols` driven by a `--cols` CSS var). No Tailwind or CSS modules.
-- Fonts (`app/fonts.ts`): Google fonts via `next/font/google` (Big Shoulders = display, Fredoka = brand/"909", Sora = body, Raleway 100 = labels/nav) and local fonts via `next/font/local` (`public/fonts/box/A Box For 2.ttf`, `public/fonts/striker/Striker.ttf`).
-- Hosting: **no deploy config in the repo** (no `vercel.json`, no Dockerfile). The host must be a Node runtime that supports ISR, `revalidateTag` and `next/og` (Vercel is the natural fit). The GitHub org is `theregalphotography`; work goes through PRs into `main`.
+- **Styling:** mostly inline `style={{}}` objects. Design tokens and hover/responsive classes live in `app/globals.css`:
+  - tokens: `--color-*`, `--font-*`, `--page-px`
+  - classes: `.btn-solid`, `.btn-outline`, `.home-hero-*`, `.responsive-cols` (driven by a `--cols` CSS var), `.ticket-dialog*`
+  - No Tailwind, no CSS modules.
+- **Fonts** (`app/fonts.ts`):
+  - Google, via `next/font/google`: Big Shoulders (display), Fredoka (brand/"909"), Sora (body), Raleway 100 (labels/nav).
+  - Local, via `next/font/local`: "A Box For" and "Striker" from `public/fonts/`.
+- **Hosting:** no deploy config in the repo (no `vercel.json`, no Dockerfile). The host must be a Node runtime that supports ISR, `revalidateTag` and `next/og` (Vercel is the natural fit).
+- **Repo:** GitHub org `theregalphotography`; PRs go into `main`.
 
 ## 2. Directory & architecture map
 
 ```
 app/
   layout.tsx            Root layout: font CSS vars, metadata (metadataBase from NEXT_PUBLIC_SITE_URL), noise overlay
-  page.tsx              Home: hero, marquee, "Happening Next" (1 or 2 Eventbrite events), teasers, CTAs   [ISR 300s]
-  events/page.tsx       Upcoming grid + "More On The Way" teasers + past events ("Rooms We Left Behind") [ISR 300s]
+  page.tsx              Home: hero, marquee, "Happening Next" (1 or 2 events), teasers, CTAs        [ISR 300s + TT tag]
+  events/page.tsx       Upcoming grid + "More On The Way" teasers + past ("Rooms We Left Behind")    [ISR 300s + TT tag]
   gallery/page.tsx      Contentful eventGallery albums → <GalleryAlbums> (client lightbox)              [tag-cached]
   about/page.tsx        Contentful aboutPage singleton, with hardcoded FALLBACK_ABOUT                   [tag-cached]
   contact/page.tsx      Static: hardcoded email/phone/IG/WhatsApp + house rules
   icon.tsx              Generated favicon ("909") via next/og ImageResponse; reads font from disk
-  api/revalidate/contentful/route.ts   POST webhook → revalidateTag (the only API route)
-  fonts.ts, globals.css
+  api/revalidate/contentful/route.ts     POST: Contentful webhook → revalidateTag per content type
+  api/revalidate/tickettailor/route.ts   POST: Ticket Tailor webhook (HMAC-verified) → revalidateTag
 lib/
-  eventbrite.ts         Eventbrite REST client, mapping, upcoming/past split, date formatters
+  events.ts             Provider-neutral TicketEvent type, getUpcomingEvents/getPastEvents (TT + legacy merge), date formatters
+  tickettailor.ts       Ticket Tailor REST client + raw→TicketEvent mapping; TICKET_TAILOR_EVENTS_CACHE_TAG
   contentful.ts         Contentful CDA client, 4 content-type fetchers, cache tags, CONTENTFUL_TAGS_BY_CONTENT_TYPE
 components/
-  Header.tsx            "use client" — nav + mobile toggle; `active` prop typed from NAV_ITEMS
+  Header.tsx            "use client": nav + mobile toggle; `active` prop typed from NAV_ITEMS
   Footer.tsx, HomeFooter.tsx, Logo.tsx, ComingSoonCard.tsx
-  eventbrite/TicketWidget.tsx   "use client" — Eventbrite embedded checkout modal
-  eventbrite/EventPoster.tsx    next/image fill wrapper (null src → dark placeholder)
-  eventbrite/HeroPairCard.tsx   One card of Home's two-event layout
-  gallery/GalleryAlbums.tsx     "use client" — paging (8/album), lightbox, keyboard nav, blob download
-contentful/migrations/  001–004 contentful-migration scripts (source of truth for content models)
-docs/contentful-content-guide.md   Client-facing ownership/workflow guide (partly stale, see §6)
-public/hero/            Hero background images; public/fonts/ local font files
+  tickets/TicketButton.tsx   "use client": button + <dialog> popup with the TT checkout in an iframe
+  tickets/EventPoster.tsx    next/image fill wrapper (null src → dark placeholder)
+  tickets/HeroPairCard.tsx   One card of Home's two-event layout
+  gallery/GalleryAlbums.tsx  "use client": paging (8/album), lightbox, keyboard nav, blob download
+data/legacy-events.json      One-time snapshot of past Eventbrite events (TicketEvent[]); posters in public/legacy-events/
+scripts/snapshot-eventbrite.mjs  Generates the snapshot above (read-only against Eventbrite)
+contentful/migrations/       001–005 contentful-migration scripts (source of truth for content models)
+docs/contentful-content-guide.md  Client-facing ownership/workflow guide
 ```
 
-Server components fetch data. Every page wraps each fetch in a local `loadX()` that **catches all errors and returns an empty value or fallback**, so pages never throw. Only Header, TicketWidget and GalleryAlbums are client components.
+- Server components fetch the data. Only Header, TicketButton and GalleryAlbums are client components.
+- Page loaders catch fetch errors. They **log via `console.error`** (Home and Events) and return empty values or fallbacks, so pages never throw.
+- **UI code imports only `lib/events.ts`.** Never import provider-specific fields into components; map them in `lib/tickettailor.ts` instead.
 
 ## 3. Third-party integrations
 
-### Eventbrite: events (REST API v3)
-- **Files:** `lib/eventbrite.ts` (data), `components/eventbrite/*` (UI). Images are allowed from `cdn.evbuc.com` and `img.evbuc.com` in `next.config.ts`.
-- **Env:** `EVENTBRITE_PRIVATE_TOKEN` (Bearer), `EVENTBRITE_ORG_ID`. `getConfig()` throws if either is missing, and the page loaders swallow that error.
-- **Flow:** `fetchAllEvents()` → `GET /organizations/{orgId}/events/?order_by=start_asc&expand=logo,venue,ticket_availability&status=live,started,ended,completed`. It follows `continuation` pagination (capped at 100 pages) and uses `fetch` with `next: { revalidate: 300 }`. `mapEvent()` produces `EventbriteEvent`.
-  - `getUpcomingEvents()`: `endUtc > now`, soonest first. `getPastEvents()`: ended, most recent first. `selectHeroEvent()` returns `upcoming[0]`.
-  - Home shows `upcoming.slice(0, 2)`: two events render `HeroPairCard` ×2, one event renders the single hero grid.
-- **No inbound Eventbrite webhook.** Freshness comes only from the 5-minute ISR window.
-- **Checkout:** `TicketWidget` loads `https://www.eventbrite.com/static/widgets/eb_widgets.js` (`next/script`, `lazyOnload`) and calls `EBWidgets.createWidget({ widgetType: "checkout", modal: true, modalTriggerElementId })`. Payment happens entirely inside Eventbrite's modal. When `hasAvailableTickets` is false, a "SOLD OUT" or "AT CAPACITY" label renders instead.
+### Ticket Tailor: events and checkout (REST API v1)
+- **Files:** `lib/tickettailor.ts` (fetch and mapping), `lib/events.ts` (upcoming/past logic), `components/tickets/*`, `app/api/revalidate/tickettailor/route.ts`. Images are allowed from `**.tickettailor.com` (`next.config.ts`).
+- **Env:** `TICKETTAILOR_API_KEY` (HTTP Basic, the key as username with an empty password), `TICKETTAILOR_WEBHOOK_SECRET`, and optional `TICKETTAILOR_CHECKOUT_DOMAIN` (see Checkout).
+- **Fetch:** `GET https://api.tickettailor.com/v1/events?limit=100`, cursor-paginated with `starting_after=<last id>` until a short page (capped at 50 pages).
+  - Uses `fetch` with `next: { revalidate: 300, tags: ["tickettailor-events"] }`.
+  - Excludes `hidden` events and `draft`/`cancelled` statuses.
+- **Mapping** (`mapEvent`):
+  - `start.iso`/`end.iso` (falling back to `unix`) → UTC ISO strings
+  - `timezone` (fallback `America/New_York`)
+  - `venue.name` plus the joined address parts
+  - `images.header` → `posterUrl`, only when the host is `*.tickettailor.com` (otherwise null, which renders the placeholder)
+  - `checkout_url` (fallback `url`), passed through `toCheckoutUrl()`
+  - `tickets_available` / `unavailable` → `hasAvailableTickets`, accepting `"true"`/`"false"` strings or booleans and defaulting to bookable
+  - HTML `description` → a plain-text `summary` of ≤220 chars
+- **Upcoming vs past:** `endUtc > now` means upcoming. `getPastEvents()` merges ended TT events with `data/legacy-events.json` (IDs prefixed `eb_`). If TT is down, the legacy history still renders.
+- **Checkout:** `TicketButton` opens a native `<dialog>` with the TT checkout in an `<iframe allow="fullscreen; payment">`.
+  - It loads the URL the way TT's official `widget.js` does: adds `widget=true`, `minimal`, `show_logo`, `bg_fill` and `ref` parameters, and posts `tt-widget-frame-init` on load.
+  - It handles TT's `postMessage` protocol (checkout-open and overlay-close messages), accepting messages only from its own iframe's origin.
+  - The iframe mounts only while open, so each open starts a fresh session. An "open in a new tab" fallback link sits in the bar. It's safe to render any number of times per page.
+- **Why the custom domain matters:** the whole purchase stays in the popup only because checkout is served from the box office custom domain **`tickets.desiroom909.com`** (a paid TT add-on; CNAME → `custom.tickettailor.com`).
+  - On `www.tickettailor.com`, a cross-site framed checkout always calls `TTCheckout.WidgetPopOut.enable()` and continues in a **new tab** after ticket selection.
+  - On the custom domain, TT instead runs a real `SameSite=None` cookie test. That passes because the frame is same-site with `www.desiroom909.com`.
+  - The API already returns custom-domain `checkout_url`s. `toCheckoutUrl()` rewrites `www.tickettailor.com` hosts to `TICKETTAILOR_CHECKOUT_DOMAIN` only as a safety net.
+  - **Consequence: in-popup checkout can only be verified on the production domain.** On `localhost` (cross-site) checkout still pops out to a new tab.
+- **Webhook:** `POST /api/revalidate/tickettailor`, registered in TT under Settings → API → Webhooks as `https://www.desiroom909.com/api/revalidate/tickettailor`.
+  - Subscribed topics: Event created/updated/deleted, Order created/updated.
+  - Header `Tickettailor-Webhook-Signature: t=<unix>,v1=<hex>`. The HMAC-SHA256 is computed over `timestamp + rawBody`, with 5-minute tolerance and a timing-safe compare.
+  - Missing secret → 500; bad or stale signature → 401.
+  - `EVENT.*` → `revalidateTag(tag, { expire: 0 })`, which shows up immediately.
+  - `ORDER.*` → `revalidateTag(tag, "max")`, stale-while-revalidate, so a burst of sales doesn't make every view a blocking API call.
+- **Rate limit:** 5000 requests per 30 minutes. Responses carry `X-Rate-Limit-*` headers and `Retry-After` on a 429.
+
+### Eventbrite: legacy only
+- There is no runtime Eventbrite code. `npm run snapshot:eventbrite` (`scripts/snapshot-eventbrite.mjs`) reads `EVENTBRITE_PRIVATE_TOKEN` and `EVENTBRITE_ORG_ID` from `.env.local`. It writes ended events to `data/legacy-events.json` and downloads posters to `public/legacy-events/`. It is GET-only and idempotent. Commit its outputs.
 
 ### Contentful: CMS (Content Delivery API)
 - **Files:** `lib/contentful.ts`, `contentful/migrations/*.js`, `app/api/revalidate/contentful/route.ts`. Images are allowed from `images.ctfassets.net` and `downloads.ctfassets.net`.
@@ -72,65 +112,64 @@ Server components fetch data. Every page wraps each fetch in a local `loadX()` t
 | `eventGallery` | `getEventGalleries()` (limit 100, include 2, `-fields.eventDate`) | `gallery` | /gallery |
 | `aboutPage` (singleton) | `getAboutPage()` (`items[0]`) | `about-page` | /about |
 | `upcomingTeaser` | `getUpcomingTeasers()` (limit 50, sorted by `order`, unset sorts last) | `upcoming-teasers` | Home (first 2), /events |
-| `heroEventPoster` | `getHeroEventPosters()` (limit 10) returns `{ [eventId or "default"]: url }` | `hero-event-poster` | Home hero, /events soonest tile |
+| `heroEventPoster` | `getHeroEventPosters()` (limit 10) returns `{ [TT eventId or "default"]: url }` | `hero-event-poster` | Home hero, /events soonest tile |
 
-- **Webhook:** `POST /api/revalidate/contentful`. It requires header `X-Webhook-Secret` to equal `CONTENTFUL_WEBHOOK_SECRET` (otherwise 401). It reads `sys.contentType.sys.id`, maps it through `CONTENTFUL_TAGS_BY_CONTENT_TYPE`, and calls `revalidateTag(tag, { expire: 0 })`. Unknown types return 200 with `revalidated: false`. One Contentful webhook (Entry publish/unpublish) covers all four types.
-- **Adding a content type:** write a new numbered migration, add the fetcher, add a tag constant **and** a `CONTENTFUL_TAGS_BY_CONTENT_TYPE` entry (without that entry the webhook can't bust the tag), and keep field IDs identical between the migration and the `fields.*` reads.
+- **Webhook:** `POST /api/revalidate/contentful`. It requires header `X-Webhook-Secret` to equal `CONTENTFUL_WEBHOOK_SECRET`. It maps `sys.contentType.sys.id` to a tag and calls `revalidateTag(tag, { expire: 0 })`.
+- **Adding a content type:** write a numbered migration, add the fetcher, add a tag constant **and** a `CONTENTFUL_TAGS_BY_CONTENT_TYPE` entry, and keep field IDs identical between the migration and the `fields.*` reads.
 
 ### Other external links (hardcoded, no API)
 - Instagram `instagram.com/desiroom909`, WhatsApp `wa.me/<number>`, `tel:` and `mailto:` links. They are duplicated across `app/page.tsx`, `app/events/page.tsx`, `app/contact/page.tsx`, `components/Footer.tsx` and `components/HomeFooter.tsx`, so update all of them together.
 - `images.unsplash.com` is allowed in `next.config.ts` but currently unused.
 
-### Not present
-No database, ORM, auth, sessions, first-party payments (Stripe etc.), analytics or tracking, email service, or env-validated config layer.
-
 ## 4. Data & state
 
-- **No database.** Eventbrite and Contentful are the only persistent state, and the content models live in `contentful/migrations/`.
-- **Caching layer = Next data cache:**
-  - Eventbrite: time-based, 300s (`export const revalidate = 300` on `/` and `/events`, plus `next.revalidate` on the fetch).
-  - Contentful: indefinite `force-cache` plus tag invalidation via the webhook. `/gallery` and `/about` export no `revalidate`.
-- Domain types: `EventbriteEvent` (`lib/eventbrite.ts`); `EventGallery`, `GalleryPhoto`, `AboutPage`, `UpcomingTeaser` (`lib/contentful.ts`).
-- Client state is local `useState` only (nav toggle, gallery paging and lightbox). There is no global store.
-- Poster override resolution: `heroPosters[event.id]` first, then `heroPosters["default"]` (applied **only to the first/soonest event**), then the Eventbrite `logoUrl`, then the placeholder.
+- **No database.** Persistent state lives in Ticket Tailor, Contentful and the committed `data/legacy-events.json`.
+- **Caching = Next data cache:**
+  - Ticket Tailor: tag `tickettailor-events`, busted by the webhook, with a 300s ISR fallback.
+  - Contentful: indefinite `force-cache` plus webhook tag invalidation.
+- Domain types: `TicketEvent` (`lib/events.ts`); `EventGallery`, `GalleryPhoto`, `AboutPage`, `UpcomingTeaser` (`lib/contentful.ts`).
+- Client state is local `useState` only. There is no global store.
+- **Poster resolution order:**
+  1. `heroPosters[event.id]`
+  2. `heroPosters["default"]`, applied **only to the first/soonest event**
+  3. the TT `posterUrl`
+  4. the placeholder
 
 ## 5. Commands
 
 ```
-npm run dev         # next dev (also regenerates the nextjs-agent-rules block above)
-npm run build       # next build — the only full verification step
+npm run dev                  # next dev (also regenerates the nextjs-agent-rules block above)
+npm run build                # the only full verification step
 npm run start
-npm run typecheck   # tsc --noEmit
+npm run typecheck            # tsc --noEmit
+npm run snapshot:eventbrite  # one-time legacy export; needs EVENTBRITE_* in .env.local
 ```
 - **No lint script, no test framework, no CI config.** Verify with `typecheck` and `build`.
-- Local env: copy `.env.example` to `.env.local`. Without Eventbrite or Contentful creds the pages still render, but with empty or fallback states.
-- Contentful migration: `npx contentful-migration --space-id <ID> --environment-id master --access-token <CMA_TOKEN> --yes contentful/migrations/00X-*.js` (the script path is positional).
+- **Webhook smoke test:** start the server with `TICKETTAILOR_WEBHOOK_SECRET=x`, then POST a body with header `t=<now>,v1=<hex HMAC-SHA256 of now+body>`.
+- **Local env:** copy `.env.example` to `.env.local`. Without credentials, pages render empty or fallback states and log the missing key.
+- **Contentful migration:** `npx contentful-migration --space-id <ID> --environment-id master --access-token <CMA_TOKEN> --yes contentful/migrations/00X-*.js` (the script path is positional).
 
 ## 6. Gotchas & technical debt
 
-- **Errors are invisible.** Every loader swallows exceptions, so a bad token or API outage shows up as "NO DOORS OPEN RIGHT NOW", an empty gallery, or fallback About copy. Nothing is logged. On ISR pages that empty result can be cached for up to 5 minutes.
-- **Eventbrite:**
-  - `hasAvailableTickets` defaults to `true` when `ticket_availability` is missing.
-  - Draft and canceled events are excluded by the `status` filter.
-  - "Upcoming" is keyed on **end** time, so events in progress still show as upcoming.
-  - `/events` calls `getUpcomingEvents` and `getPastEvents`, which each call `fetchAllEvents`. This relies on Next's fetch dedup and cache, so keep the fetch URL and options identical.
-  - Eventbrite rate-limits per token. Don't add per-request or uncached calls.
-- **TicketWidget:** the DOM id is `eventbrite-widget-modal-trigger-${eventId}`, so rendering the same event twice on one page creates duplicate IDs. A 150ms polling fallback exists because `onReady` can fire before `window.EBWidgets` is set when two widgets share the script (Home's two-event pair). Don't remove it.
-- **Webhook:**
-  - Only entry payloads carry `sys.contentType`, so **replacing an asset file in place does not bust any cache** (the entry must be republished).
-  - The secret check is a plain `!==` comparison (not timing-safe).
-  - The Contentful environment is hardcoded to `master` everywhere.
-- **Contentful limits:** galleries are capped at 100 entries with no pagination (and a large `include=2` response could hit CDA response-size limits). Teasers are capped at 50 and posters at 10. Duplicate `heroEventPoster.eventId` values resolve last-wins, and entries without `eventId` all collapse into `"default"`.
-- **Manual editorial upkeep:** teasers are never deduped against real Eventbrite events, and a stale `heroEventPoster` is never detected. The client has to unpublish both by hand.
-- **Dates:** Eventbrite formatters use the event's own `timezone`. `formatEventMeta()` (gallery month/year) uses the **server's local timezone** on a date-only string, so it can show the previous month when run in a US timezone. It is correct on UTC hosts.
-- **Fonts/licensing:** "A Box For" (hero wordmark and favicon) and "Striker" are marked *preview-only*. A Box For needs a **paid license before production**. `app/icon.tsx` reads the TTF via `process.cwd()`, so the font must exist at runtime on the host.
+- **The TT field mapping is unverified against a live response.** The official schema renders client-side and couldn't be read when this was built. Check `lib/tickettailor.ts` → `RawTicketTailorEvent` against a real `GET /v1/events` response. The fields that matter most are `tickets_available`, `status`, `hidden`, `images` and `checkout_url`.
+- **TT image host:** if posters render as placeholders and the logs show "Poster host … is not in next.config.ts remotePatterns", add that host in **both** `next.config.ts` and `toPosterUrl()`. next/image throws for unknown hosts, which is why the guard exists.
+- **Checkout iframe:** this depends on the TT custom domain staying active and being a subdomain of the site's domain. If the add-on lapses, or the site moves to a different registrable domain, checkout falls back to opening a new tab after ticket selection. If the site's domain changes, the custom domain must move with it.
+- **Errors are mostly invisible to visitors.** Failed fetches show as empty states ("NO DOORS OPEN RIGHT NOW"). Home and Events log to `console.error`; Contentful loaders still swallow errors silently. An empty ISR result can be cached for up to 5 minutes, or until the next webhook.
+- **Upcoming is keyed on end time**, so events in progress still show as upcoming. `/events` calls `fetchAllTicketTailorEvents` twice (upcoming and past), relying on Next's fetch dedup, so keep the URL and options identical.
+- **Webhooks:**
+  - TT order webhooks fire per sale, which is why they use `"max"`, not `expire: 0`.
+  - Contentful asset-only changes carry no `sys.contentType`, so republish the entry.
+  - The Contentful secret check is a plain `!==` comparison (not timing-safe).
+  - The Contentful environment is hardcoded to `master`.
+- **Contentful limits:** galleries are capped at 100 with no pagination, teasers at 50, posters at 10. Duplicate `heroEventPoster.eventId` values resolve last-wins.
+- **Manual editorial upkeep:**
+  - Teasers are never deduped against real TT events.
+  - Stale `heroEventPoster` entries are never detected.
+  - Entries still holding **old Eventbrite IDs** match nothing; re-enter the TT `ev_…` ID.
+- **Dates:** event formatters use the event's own `timezone`. `formatEventMeta()` (gallery month/year) uses the server's local timezone on a date-only string, so it can show the previous month when run in a US timezone. It is correct on UTC hosts.
+- **Fonts/licensing:** "A Box For" (hero wordmark and favicon) and "Striker" are marked *preview-only*. A Box For needs a **paid license before production**. `app/icon.tsx` reads the TTF via `process.cwd()`.
 - **Fragile asset path:** the Home brand-statement background uses the relative `url('hero/defines.jpeg')` (no leading `/`). It only works because it renders on `/`.
-- **Dead or stale code:**
-  - `getEventBySlug()` and `EventbriteEvent.slug` are unused (there is no event detail route).
-  - `TICKETS_URL` (`buytickets.at`) in `app/page.tsx` is only referenced by commented-out JSX.
-  - The unsplash image domain is unused.
-  - The `getEventGalleries` JSDoc points at a nonexistent `app/api/revalidate/gallery`.
-  - `docs/contentful-content-guide.md` still calls `heroEventPoster` a singleton and lists only migrations 001–003 (004 added `eventId`).
-- **Inline-style convention:** most styling lives in inline objects, so to restyle something, search the component first and `globals.css` second. Hover, focus and media-query behavior must go in `globals.css` classes because inline styles can't express it.
-- **Next 16 APIs:** e.g. `revalidateTag(tag, { expire: 0 })` uses the two-argument form. Check `node_modules/next/dist/docs/` before using any caching or routing API from memory.
+- **Dead code:** `TICKETS_URL` in `app/page.tsx` is only referenced by commented-out JSX.
+- **Inline-style convention:** search the component first, then `globals.css`. Hover, focus and media-query behavior must go in `globals.css` classes.
+- **Next 16 APIs:** `revalidateTag` needs its second argument (`"max"` or `{ expire: 0 }`); the one-argument form is deprecated. Check `node_modules/next/dist/docs/` before using any caching or routing API from memory.
 - **Never commit secrets.** Real values live only in `.env.local`, which is gitignored. `.env.example` lists names only.

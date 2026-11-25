@@ -2,15 +2,15 @@ import type { Metadata } from "next";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import ComingSoonCard from "@/components/ComingSoonCard";
-import EventPoster from "@/components/eventbrite/EventPoster";
-import TicketWidget from "@/components/eventbrite/TicketWidget";
+import EventPoster from "@/components/tickets/EventPoster";
+import TicketButton from "@/components/tickets/TicketButton";
 import {
   formatPastEventDate,
   getPastEvents,
   getUpcomingEvents,
   selectHeroEvent,
-  type EventbriteEvent,
-} from "@/lib/eventbrite";
+  type TicketEvent,
+} from "@/lib/events";
 import {
   DEFAULT_HERO_POSTER_KEY,
   getHeroEventPosters,
@@ -25,12 +25,14 @@ export const metadata: Metadata = {
   description: "No fixed address. Every 909 is a one-night takeover — find the door before it's gone.",
 };
 
-async function loadEvents(): Promise<{ upcoming: EventbriteEvent[]; past: EventbriteEvent[] }> {
+async function loadEvents(): Promise<{ upcoming: TicketEvent[]; past: TicketEvent[] }> {
   try {
     const [upcoming, past] = await Promise.all([getUpcomingEvents(), getPastEvents()]);
     return { upcoming, past };
-  } catch {
-    return { upcoming: [], past: [] };
+  } catch (error) {
+    console.error("[events] Ticket Tailor events fetch failed:", error);
+    // Past events still include the legacy Eventbrite snapshot when Ticket Tailor is down.
+    return { upcoming: [], past: await getPastEvents().catch(() => []) };
   }
 }
 
@@ -149,7 +151,7 @@ export default async function EventsPage() {
                   src={
                     heroPosters[event.id] ??
                     (event.id === heroEvent?.id ? heroPosters[DEFAULT_HERO_POSTER_KEY] : undefined) ??
-                    event.logoUrl
+                    event.posterUrl
                   }
                   alt={event.name}
                   sizes="(max-width: 640px) 90vw, 380px"
@@ -173,8 +175,9 @@ export default async function EventsPage() {
                 </div>
                 <div style={{ display: "flex", alignItems: "center", gap: 12, marginTop: "auto", paddingTop: 14 }}>
                   {event.hasAvailableTickets ? (
-                    <TicketWidget
-                      eventId={event.id}
+                    <TicketButton
+                      checkoutUrl={event.checkoutUrl}
+                      eventName={event.name}
                       label="GET TICKETS"
                       className="btn-solid"
                       style={{ padding: "13px 26px", borderRadius: 999, fontSize: 12, letterSpacing: "0.2em", fontWeight: 600, border: "none", cursor: "pointer" }}
@@ -242,16 +245,15 @@ export default async function EventsPage() {
               {past.map((event) => (
                 <div key={event.id} className="events-past-row" style={{ borderTop: "1px solid rgba(242,233,221,0.16)" }}>
                   <EventPoster
-                    src={event.logoUrl}
+                    src={event.posterUrl}
                     alt={event.name}
                     sizes="110px"
-                    grayscale
                     className="events-past-thumb"
                     style={{ border: "1px solid var(--color-cream-a20)" }}
                   />
                   <div className="events-past-info">
                     <div style={{ fontSize: 11, letterSpacing: "0.3em", color: "var(--color-cream-a55)", marginBottom: 8 }}>
-                      {formatPastEventDate(event.endUtc, event.timezone)} · {event.venueName}
+                      {formatPastEventDate(event.startUtc, event.timezone)} · {event.venueName}
                     </div>
                     <div style={{ fontFamily: "var(--font-display)", fontWeight: 700, fontSize: 34, lineHeight: 1 }}>{event.name}</div>
                   </div>

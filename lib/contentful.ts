@@ -105,7 +105,7 @@ function mapEntry(entry: ContentfulEntry, assetsById: Map<string, ContentfulAsse
 
 /**
  * Fetches all published event photo galleries from Contentful, most recent first.
- * Revalidated on-demand via the Contentful publish webhook (see app/api/revalidate/gallery).
+ * Revalidated on-demand via the Contentful publish webhook (see app/api/revalidate/contentful).
  */
 export async function getEventGalleries(): Promise<EventGallery[]> {
   const { spaceId, accessToken } = getConfig();
@@ -205,8 +205,8 @@ interface UpcomingTeaserEntry {
 }
 
 /**
- * Fetches "coming soon" room teasers — rooms without a confirmed Eventbrite
- * date/venue yet. No booking, no exact date; shown below the real Eventbrite
+ * Fetches "coming soon" room teasers — rooms without a confirmed Ticket Tailor
+ * date/venue yet. No booking, no exact date; shown below the real Ticket Tailor
  * hero event on Home and alongside bookable events on the Events page.
  * Sorted by the optional `order` field (ascending); entries without one sort
  * after all ordered entries, in the order Contentful returned them.
@@ -266,12 +266,12 @@ interface HeroEventPosterEntry {
 }
 
 /**
- * Fetches Home "Happening Next" poster overrides, keyed by Eventbrite event
+ * Fetches Home "Happening Next" poster overrides, keyed by Ticket Tailor event
  * ID (or `DEFAULT_HERO_POSTER_KEY` for an entry with no `eventId` set). All
  * other event details (name, date, venue, tickets) still come from
- * Eventbrite — this only swaps the image. Two published events need two
+ * Ticket Tailor — this only swaps the image. Two published events need two
  * entries in Contentful: one with `eventId` matching the second event's
- * Eventbrite ID, so it doesn't collide with the default/primary poster.
+ * Ticket Tailor ID, so it doesn't collide with the default/primary poster.
  */
 export async function getHeroEventPosters(): Promise<Record<string, string>> {
   const { spaceId, accessToken } = getConfig();

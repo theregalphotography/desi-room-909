@@ -1,6 +1,6 @@
 # Contentful content guide
 
-Who's responsible for what, and how content gets from Contentful/Eventbrite onto the site.
+Who's responsible for what, and how content gets from Contentful/Ticket Tailor onto the site.
 A polished client-facing version of this same content is published as an Artifact — ask in
 the Claude session that built this to regenerate/update it if needed.
 
@@ -8,24 +8,28 @@ the Claude session that built this to regenerate/update it if needed.
 
 Two independent systems feed the site. Neither knows the other exists.
 
-- **Eventbrite** — source of truth for real events (date, venue, poster, tickets). Read via
-  `lib/eventbrite.ts`, polled on a 5-minute ISR revalidation (`export const revalidate = 300`
-  on `app/page.tsx` and `app/events/page.tsx`).
+- **Ticket Tailor** — source of truth for real events (date, venue, poster, tickets). Read via
+  `lib/tickettailor.ts` (mapped to a neutral shape in `lib/events.ts`), refreshed near-instantly by
+  the Ticket Tailor webhook at `app/api/revalidate/tickettailor/route.ts`, with a 5-minute ISR
+  fallback (`export const revalidate = 300` on `app/page.tsx` and `app/events/page.tsx`).
+  Events that ran on Eventbrite before the switch live in a one-time snapshot,
+  `data/legacy-events.json` (+ posters in `public/legacy-events/`).
 - **Contentful** — source of truth for photo galleries, About page copy, and non-bookable
   "coming soon" teasers. Read via `lib/contentful.ts`, cached indefinitely and revalidated
   on-demand via the webhook at `app/api/revalidate/contentful/route.ts` (near-instant).
 
-## Eventbrite — fully automatic, no manual step
+## Ticket Tailor — fully automatic, no manual step
 
-Client manages events entirely inside Eventbrite as normal. The site derives everything else:
+Client manages events entirely inside Ticket Tailor as normal. The site derives everything else:
 
 - Soonest published upcoming event → Home page "Happening Next" hero
-  (`selectHeroEvent()` in `lib/eventbrite.ts`)
+  (`selectHeroEvent()` in `lib/events.ts`)
 - All published upcoming events → Events page bookable grid (`getUpcomingEvents()`)
 - Events past their end time → automatically move to "Rooms We Left Behind"
-  (`getPastEvents()`)
-- Ticket purchase stays on-site via Eventbrite's embedded checkout widget
-  (`components/eventbrite/TicketWidget.tsx`)
+  (`getPastEvents()`, merged with the legacy Eventbrite snapshot)
+- Hidden and draft events never appear on the site
+- Ticket purchase stays on-site: the Ticket Tailor checkout opens in a popup
+  (`components/tickets/TicketButton.tsx`)
 
 No cross-reference to Contentful happens here.
 
@@ -40,7 +44,7 @@ No cross-reference to Contentful happens here.
 | `eventReference` | Symbol, optional | Editorial-only note; never displayed, never matched automatically |
 | `photos` | Array<Link:Asset> | Full photo batch for that night |
 
-**No automatic link to Eventbrite.** One entry = one event's whole album, created and matched
+**No automatic link to Ticket Tailor.** One entry = one event's whole album, created and matched
 by the client manually. A wrong title/date won't error, it'll just display wrong.
 
 ### `aboutPage` (About page, singleton)
@@ -61,29 +65,32 @@ Only one entry should ever be published — the app takes `data.items[0]`, first
 | `poster` | Link:Asset | Teaser image, rendered dimmed with a static "COMING SOON" badge |
 | `order` | Integer, optional | Ascending sort; unset entries sort last, in fetch order |
 
-No booking, no exact date — deliberately not wired to Eventbrite at all. **Client must manually
-unpublish/delete the teaser once the real event goes live in Eventbrite** — the app does not
+No booking, no exact date — deliberately not wired to Ticket Tailor at all. **Client must manually
+unpublish/delete the teaser once the real event goes live in Ticket Tailor** — the app does not
 detect or dedupe this automatically, so both a teaser and the real event can show
 simultaneously if forgotten.
 
-### `heroEventPoster` (soonest-upcoming event's poster override, singleton)
+### `heroEventPoster` (Home "Happening Next" poster overrides)
 
 | Field | Type | Notes |
 |---|---|---|
-| `poster` | Link:Asset | Replaces the poster image for the soonest-upcoming event |
+| `poster` | Link:Asset | Replacement poster image |
+| `eventId` | Symbol, optional | Ticket Tailor event ID (`ev_…`). Blank = override for the soonest-upcoming event |
 
-**This is the one exception to "Contentful never cross-references Eventbrite."** Every other
-detail — name, date, venue, ticket availability — still comes straight from Eventbrite; only
-the poster image is swappable. Same singleton pattern as `aboutPage`: only one entry should
-ever be published, the app always reads the first one it finds, and publishing nothing here is
-safe — it falls back to that event's own Eventbrite logo automatically.
+**This is the one exception to "Contentful never cross-references Ticket Tailor."** Every other
+detail — name, date, venue, ticket availability — still comes straight from Ticket Tailor; only
+the poster image is swappable. Publish one blank-`eventId` entry for the soonest event, plus one
+entry per additional event with `eventId` set (Home shows up to two events). Publishing nothing
+here is safe — it falls back to that event's own Ticket Tailor image automatically.
+
+**After the Ticket Tailor switch, any entry still holding an old Eventbrite ID matches nothing** —
+re-enter the Ticket Tailor ID on each.
 
 Applied in two places, both keyed off the same "soonest-upcoming" event so they always agree:
 the Home "Happening Next" hero, and that same event's tile in the Events page's upcoming grid
-(every other tile in that grid keeps its Eventbrite image).
+(every other tile in that grid keeps its Ticket Tailor image).
 
-The hero only ever shows one event at a time, so there's no event-matching. **Client must
-update (or unpublish) this entry when the featured event changes** — same manual-upkeep risk
+**Client must update (or unpublish) these entries when the featured events change** — same manual-upkeep risk
 as `upcomingTeaser`, the app won't detect a stale poster on its own.
 
 ## Migrations
@@ -94,6 +101,8 @@ are guaranteed to match what the code reads:
 - `contentful/migrations/001-initial-content-types.js` — `eventGallery`, `aboutPage`
 - `contentful/migrations/002-upcoming-teaser.js` — `upcomingTeaser`
 - `contentful/migrations/003-hero-event-poster.js` — `heroEventPoster`
+- `contentful/migrations/004-hero-event-poster-event-id.js` — `heroEventPoster.eventId`
+- `contentful/migrations/005-hero-event-poster-tickettailor-id.js` — relabels `eventId` for Ticket Tailor IDs
 
 Run with `contentful-migration` (via `npx`), requires a Content Management API token
 (write access, separate from the runtime `CONTENTFUL_ACCESS_TOKEN` Delivery token). The
@@ -107,7 +116,8 @@ npx contentful-migration --space-id <SPACE_ID> --environment-id master \
 
 ## Revalidation
 
-- Eventbrite pages: time-based ISR, 5 minutes.
+- Ticket Tailor data: busted by a Ticket Tailor webhook (event changes immediately, order changes
+  stale-while-revalidate), with a 5-minute ISR fallback. See `CLAUDE.md` for webhook setup.
 - Contentful pages: cached indefinitely (`cache: "force-cache"` + `next.tags`), busted
   on-demand by a Contentful webhook → `app/api/revalidate/contentful/route.ts`, which reads
   `sys.contentType.sys.id` from the webhook payload and calls

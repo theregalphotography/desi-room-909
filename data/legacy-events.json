@@ -1,0 +1,41 @@
+[
+  {
+    "id": "eb_1996765906578",
+    "name": "BOLLY TOLLY UNPLUGGED",
+    "summary": "Desi Room 909 presents Bolly Tolly Unplugged - Bollywood, Tollywood, & EDM beats, drinks, dance, food, hookah and unforgettable vibes.",
+    "startUtc": "2026-09-05T02:00:00Z",
+    "endUtc": "2026-09-05T06:00:00Z",
+    "timezone": "America/New_York",
+    "venueName": "Seaboard Southend",
+    "venueAddress": "3232 South Boulevard #101, Charlotte, NC 28209",
+    "posterUrl": "/legacy-events/1996765906578.jpg",
+    "checkoutUrl": "",
+    "hasAvailableTickets": false
+  },
+  {
+    "id": "eb_2000292159696",
+    "name": "HALLOWEEN AFTER DARK - Bollywood x Tollywood",
+    "summary": "Desi Room 909 Halloween After Dark! Bollywood × Tollywood × EDM, drinks, food, hookah, costumes & nonstop dancing. Charlotte, get ready!",
+    "startUtc": "2026-10-31T02:00:00Z",
+    "endUtc": "2026-10-31T06:00:00Z",
+    "timezone": "America/New_York",
+    "venueName": "Seaboard Southend",
+    "venueAddress": "3232 South Boulevard #101, Charlotte, NC 28209",
+    "posterUrl": "/legacy-events/2000292159696.jpg",
+    "checkoutUrl": "",
+    "hasAvailableTickets": false
+  },
+  {
+    "id": "eb_2002802077929",
+    "name": "RAAGIN (The Band) - Telugu Live Music Concert & Jam Session",
+    "summary": "Get ready for an unforgettable night with Raagin – The Band, bringing the best of Telugu & Hindi live music under one roof!",
+    "startUtc": "2026-11-21T02:00:00Z",
+    "endUtc": "2026-11-21T07:00:00Z",
+    "timezone": "America/New_York",
+    "venueName": "Seaboard Southend",
+    "venueAddress": "3232 South Boulevard #101, Charlotte, NC 28209",
+    "posterUrl": "/legacy-events/2002802077929.jpg",
+    "checkoutUrl": "",
+    "hasAvailableTickets": false
+  }
+]

@@ -2,16 +2,16 @@ import Link from "next/link";
 import Header from "@/components/Header";
 import HomeFooter from "@/components/HomeFooter";
 import ComingSoonCard from "@/components/ComingSoonCard";
-import EventPoster from "@/components/eventbrite/EventPoster";
-import HeroPairCard from "@/components/eventbrite/HeroPairCard";
-import TicketWidget from "@/components/eventbrite/TicketWidget";
+import EventPoster from "@/components/tickets/EventPoster";
+import HeroPairCard from "@/components/tickets/HeroPairCard";
+import TicketButton from "@/components/tickets/TicketButton";
 import {
   formatEventDateBadge,
   formatEventTimeRange,
   formatShortEventDate,
   getUpcomingEvents,
-  type EventbriteEvent,
-} from "@/lib/eventbrite";
+  type TicketEvent,
+} from "@/lib/events";
 import {
   DEFAULT_HERO_POSTER_KEY,
   getHeroEventPosters,
@@ -26,12 +26,13 @@ const MARQUEE_TEXT =
   "21+ Only • ID Required • Bollywood • Tollywood • Kollywood • EDM • Techno • Live Concerts • DJ Nights • Dancing • Food & Drinks • Hookah • ";
 
 async function loadUpcoming(): Promise<{
-  upcoming: EventbriteEvent[];
+  upcoming: TicketEvent[];
   error: boolean;
 }> {
   try {
     return { upcoming: await getUpcomingEvents(), error: false };
-  } catch {
+  } catch (error) {
+    console.error("[home] Ticket Tailor events fetch failed:", error);
     return { upcoming: [], error: true };
   }
 }
@@ -297,7 +298,7 @@ export default async function HomePage() {
                 HAPPENING NEXT
               </div>
               <EventPoster
-                src={heroPosterUrl ?? hero.logoUrl}
+                src={heroPosterUrl ?? hero.posterUrl}
                 alt={hero.name}
                 sizes="(max-width: 1024px) 90vw, 420px"
                 style={{
@@ -405,8 +406,9 @@ export default async function HomePage() {
                 }}
               >
                 {hero.hasAvailableTickets ? (
-                  <TicketWidget
-                    eventId={hero.id}
+                  <TicketButton
+                    checkoutUrl={hero.checkoutUrl}
+                    eventName={hero.name}
                     label="GET TICKETS"
                     className="btn-solid"
                     style={{

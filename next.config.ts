@@ -15,13 +15,15 @@ const nextConfig: NextConfig = {
         protocol: "https",
         hostname: "images.unsplash.com",
       },
+      // Ticket Tailor event images (live host: uploads.tickettailorassets.com).
+      // Keep in sync with ALLOWED_IMAGE_DOMAINS in lib/tickettailor.ts.
       {
         protocol: "https",
-        hostname: "cdn.evbuc.com",
+        hostname: "**.tickettailorassets.com",
       },
       {
         protocol: "https",
-        hostname: "img.evbuc.com",
+        hostname: "**.tickettailor.com",
       },
     ],
   },
